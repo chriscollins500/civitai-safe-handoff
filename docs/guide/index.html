@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prepare a Civitai handoff, exchange pickup offers and replies, and verify the saved file.">
+  <title>Handoff guide | Civitai SAFE Handoff</title><link rel="icon" href="../assets/icon.png"><link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top"><div class="wrap bar"><a class="brand" href="../"><img src="../assets/icon.png" width="36" height="36" alt="">SAFE Handoff</a><nav aria-label="Main"><a href="./" aria-current="page">Guide</a><a href="../limits/">Limits</a><a href="../review/">Review kit</a><a href="https://github.com/chriscollins500/civitai-safe-handoff">GitHub ↗</a></nav></div></header>
+  <main class="wrap content" id="main">
+    <div class="page-intro"><p class="eyebrow">Quick start</p><h1>Send and pick up a file.</h1><p class="lead">Open SAFE Handoff on Civitai. Keep both browser tabs open while you exchange the offer and reply and finish the save.</p><nav class="jump" aria-label="On this page"><a href="#sender">Send</a><a href="#recipient">Pick up</a><a href="#expiry">Expiry and privacy</a><a href="#pins">Model pins</a></nav></div>
+    <section class="section split rule" id="sender">
+      <div><h2>Send the file</h2><ol class="steps">
+        <li><strong>Choose files and recipients.</strong><span>Enter one name per line. Use <em>Prepare handoff</em> to fingerprint the file or build a ZIP in your browser.</span></li>
+        <li><strong>Create a separate offer for each person.</strong><span>Use <em>Copy pickup link</em> where available. Otherwise select the offer code and send it in private Civitai chat. Send each line as its own message if the code is split.</span></li>
+        <li><strong>Paste the reply under the matching recipient.</strong><span>Choose <em>Connect recipient</em>. Keep the tab open until their receipt arrives.</span></li>
+      </ol></div>
+      <figure class="shot"><img src="../assets/sender.png" alt="Prepared sender view with separate pickup offer buttons for three recipients" loading="lazy"><figcaption>The sender manages offers and receipts in one view.</figcaption></figure>
+    </section>
+    <section class="section split rule" id="recipient">
+      <div><h2>Pick up and verify the save</h2><ol class="steps">
+        <li><strong>Open the link or paste the offer.</strong><span>Choose <em>Create pickup reply</em>. Send your reply in private Civitai chat and wait for the sender to connect.</span></li>
+        <li><strong>Save the file.</strong><span>Choose <em>Save file</em> and wait for the browser download to finish.</span></li>
+        <li><strong>Select the finished download.</strong><span>Use <em>Verify saved file</em>. The app checks SHA-256 and the sender confirms the receipt. If a large save was refused, use <em>Get a fresh copy</em> while the sender is still connected.</span></li>
+      </ol></div>
+      <figure class="shot narrow-shot"><img src="../assets/pickup.png" alt="Recipient view after the incoming file is verified, with the Save file action and the disk verification field" loading="lazy"><figcaption>Save the file first. Then select the saved copy.</figcaption></figure>
+    </section>
+    <section class="section rule readable" id="expiry"><h2>Expiry and privacy</h2>
+      <p>The expiry clock starts when the handoff is ready. At 24 hours, or immediately after every required recipient verifies a save, the app closes pickup access and releases its temporary file data. You can also use <em>Close handoff</em> to end it sooner.</p>
+      <p>A suspended tab clears expired data as soon as it next runs. The app checks the deadline before it sends, saves, or accepts a receipt. Closing the sender tab ends the handoff.</p>
+      <p>A save that the browser already started may finish after expiry. Saved copies remain on each device. Chat messages and any copies of the offer outside the app remain where they were shared, with expired offers unable to start new pickups.</p>
+      <p>Anyone holding a valid offer can create its reply. Use one private chat per recipient and connect only the reply you expected. Recipient names are labels you enter for your receipts.</p>
+    </section>
+    <section class="section rule readable" id="pins"><h2>Pin models for a creator handoff</h2><p>Use <em>Choose checkpoint</em> or <em>Choose LoRAs</em> to select catalog resources. Choose an exact file when a version offers several. Save the dependency JSON and include it with your workflow or share the pins in the same private chat.</p><p>Each collaborator accesses the dependencies through Civitai with their own account and entitlements.</p><a class="text-link" href="../limits/">Check file and connection limits →</a></section>
+  </main>
+  <footer class="foot"><div class="wrap bar"><p>SAFE Handoff <span>Independent Civitai App Block</span></p><nav aria-label="Project"><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki">Wiki</a><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Support</a><a href="../review/">Review kit</a></nav></div></footer>
+</body>
+</html>

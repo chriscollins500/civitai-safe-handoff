@@ -1,0 +1,32 @@
+body {
+  background: radial-gradient(ellipse at 16% 0%, #1c3441 0%, #131d2b 33%, #11131a 72%);
+  min-height: 100vh;
+}
+[hidden] { display: none !important; }
+.shell { margin-top: clamp(24px, 6vw, 58px); }
+.intro { margin-bottom: 5px; }
+.app-shortcuts { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 17px; }
+.app-shortcuts a { color: var(--accent); font-size: .91rem; font-weight: 650; }
+.live-section { display: grid; gap: 14px; }
+.handoff-note {
+  color: var(--muted);
+  border-inline-start: 2px solid #77cdb5;
+  padding: 7px 12px;
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+.handoff-note strong { color: #ddf8ee; }
+.live-section .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.live-section .panel { scroll-margin: 18px; }
+.live-section .panel h2 { font-size: 1.22rem; }
+.field-hint { margin-top: -10px; }
+.records:empty, .status:empty, .stack:empty { display: none; }
+#live-sender-summary:not(:has(.status:not(:empty), .records:not(:empty))) { display: none; }
+.row .status { min-height: 0; }
+.row .button { justify-self: start; }
+.live-section .button { min-height: 44px; }
+.live-section .button.primary { background: #a8edd9; border-color: #a8edd9; color: #132322; }
+.live-section .button.primary:hover { background: #cbf8e9; }
+.live-section .field textarea[readonly], .live-section .field input[readonly] { font: .8rem ui-monospace, monospace; }
+#live-receiver-area h3 { overflow-wrap: anywhere; }
+@media (max-width: 680px) { .live-section .grid { grid-template-columns: minmax(0, 1fr); } }

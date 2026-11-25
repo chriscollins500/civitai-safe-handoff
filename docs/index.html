@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Send creator files directly from your browser on Civitai and see who saved a verified copy.">
+  <title>Civitai SAFE Handoff | Direct creator file sharing</title>
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/demo.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top"><div class="wrap bar">
+    <a class="brand" href="./" aria-current="page"><img src="assets/icon.png" width="36" height="36" alt="">SAFE Handoff</a>
+    <nav aria-label="Main"><a href="guide/">Guide</a><a href="limits/">Limits</a><a href="review/">Review kit</a><a href="https://github.com/chriscollins500/civitai-safe-handoff">GitHub ↗</a></nav>
+  </div></header>
+  <main id="main">
+    <section class="hero" aria-labelledby="headline">
+      <img class="hero-art" src="assets/cover.png" width="1672" height="941" alt="">
+      <div class="wrap hero-content">
+        <p class="eyebrow">Browser-only file sharing for Civitai</p>
+        <h1 id="headline">Send the file.<br>See who saved it.</h1>
+        <p class="lead">Share a workflow, render, or ZIP with up to 20 collaborators. Each person gets a private offer, and you see a receipt when they verify their saved copy.</p>
+        <div class="actions"><a class="button primary" href="guide/">Learn the handoff</a><a class="button ghost" href="review/#screenshots">See the app</a></div>
+      </div>
+    </section>
+    <div class="wrap facts" aria-label="Handoff details">
+      <div><strong>24 hours</strong><span>Maximum pickup window</span></div>
+      <div><strong>256 MiB</strong><span>Maximum allowed ZIP</span></div>
+      <div><strong>20 people</strong><span>Separate offers and receipts</span></div>
+      <div><strong>Zero installs</strong><span>Uses your existing browser</span></div>
+    </div>
+    <section class="wrap section split" aria-labelledby="flow">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2 id="flow">One file, separate pickups.</h2>
+        <ol class="steps">
+          <li><strong>Prepare the file.</strong><span>Choose the files and enter the people who should receive them.</span></li>
+          <li><strong>Exchange the offer and reply.</strong><span>Send each offer in private Civitai chat. Connect using that person’s reply.</span></li>
+          <li><strong>Verify the saved copy.</strong><span>Each recipient saves the file, then selects it again for the SHA-256 check.</span></li>
+        </ol>
+        <a class="text-link" href="guide/">Walk through both sides →</a>
+      </div>
+      <figure class="shot"><img src="assets/sender.png" alt="The SAFE Handoff app with pickup offers ready for Guest A, Guest B, and Guest C" loading="lazy"><figcaption>Actual App Block using a synthetic workflow and three recipients.</figcaption></figure>
+    </section>
+    <section class="section tinted" aria-labelledby="cutoff"><div class="wrap split">
+      <div>
+        <p class="eyebrow">Verified pickup receipts</p>
+        <h2 id="cutoff">The last verified save ends the handoff.</h2>
+        <p class="body-copy">Opening an offer, receiving the bytes, or starting a save leaves the pickup open. The receipt arrives after the recipient selects their saved file and its SHA-256 matches.</p>
+        <p class="body-copy">On expiry, the app closes the pickup and clears its copy from active tabs. A copy already saved to a device stays there.</p>
+        <a class="text-link" href="guide/#expiry">Read the expiry and privacy details →</a>
+      </div>
+      <div class="demo" id="receipt-demo">
+        <div class="demo-head"><h3>Try the receipt flow</h3><span>Sample data</span></div>
+        <ul aria-label="Sample pickup receipts"><li><span>Guest A</span><strong data-recipient>Waiting</strong></li><li><span>Guest B</span><strong data-recipient>Waiting</strong></li><li><span>Guest C</span><strong data-recipient>Waiting</strong></li></ul>
+        <p class="demo-status" role="status">Open for pickup. 0 of 3 verified.</p>
+        <div class="actions" hidden><button class="button primary" type="button" data-verify>Verify next save</button><button class="button ghost" type="button" data-reset>Reset</button></div>
+        <p data-fallback>When all three recipients verify their saved copies, the handoff clears the temporary file and closes offers.</p>
+      </div>
+    </div></section>
+    <section class="wrap section split" aria-labelledby="creators">
+      <div><p class="eyebrow">Creator workflows</p><h2 id="creators">Pin the model your workflow needs.</h2><p class="body-copy">Use the Civitai resource picker to select exact checkpoint and LoRA versions. Export the pins as JSON with file IDs and hashes where available.</p></div>
+      <div class="callout"><h3>Use the app inside Civitai</h3><p>Both domains use the same handoff flow. App Store access depends on your Civitai account and listing availability.</p><div class="actions"><a class="button ghost" href="https://civitai.com/">Civitai.com ↗</a><a class="button ghost" href="https://civitai.red/">Civitai.red ↗</a></div></div>
+    </section>
+  </main>
+  <footer class="foot"><div class="wrap bar"><p>SAFE Handoff <span>Independent Civitai App Block</span></p><nav aria-label="Project"><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki">Wiki</a><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Support</a><a href="review/">Review kit</a></nav></div></footer>
+</body>
+</html>

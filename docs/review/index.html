@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Civitai SAFE Handoff review candidate, App Block screenshots and test evidence.">
+  <title>Review kit | Civitai SAFE Handoff</title><link rel="icon" href="../assets/icon.png"><link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top"><div class="wrap bar"><a class="brand" href="../"><img src="../assets/icon.png" width="36" height="36" alt="">SAFE Handoff</a><nav aria-label="Main"><a href="../guide/">Guide</a><a href="../limits/">Limits</a><a href="./" aria-current="page">Review kit</a><a href="https://github.com/chriscollins500/civitai-safe-handoff">GitHub ↗</a></nav></div></header>
+  <main class="wrap content" id="main">
+    <div class="page-intro"><p class="eyebrow">App Store review candidate · v0.2.0</p><h1>Review SAFE Handoff.</h1><p class="lead">An on-site Civitai App Block for direct creator file sharing, multiple recipients, verified pickup receipts and model dependency pins.</p><div class="actions"><a class="button primary" href="https://github.com/chriscollins500/civitai-safe-handoff/wiki">Read the Wiki ↗</a><a class="button ghost" href="#screenshots">Open screenshots</a><a class="button ghost" href="https://github.com/chriscollins500/civitai-safe-handoff">Browse source ↗</a></div></div>
+    <section class="section rule" id="screenshots"><h2>App screenshots</h2><p class="body-copy">Captured from the packaged App Block in a real browser using synthetic files and the Civitai host fixture.</p><div class="gallery">
+      <figure class="shot gallery-wide"><a href="../assets/sender.png"><img src="../assets/sender.png" alt="The full App Block showing a prepared handoff for three guests"></a><figcaption>Sender · A handoff prepared for three recipients.</figcaption></figure>
+      <figure class="shot"><a href="../assets/pickup.png"><img src="../assets/pickup.png" alt="The recipient’s verified incoming file with Save file and Verify saved file controls" loading="lazy"></a><figcaption>Pickup · Save the verified incoming file and select the downloaded copy.</figcaption></figure>
+      <figure class="shot"><a href="../assets/receipts.png"><img src="../assets/receipts.png" alt="The sender’s three verified receipts and the message that the handoff has closed" loading="lazy"></a><figcaption>Receipts · The third verified save closes the handoff.</figcaption></figure>
+    </div></section>
+    <section class="section split rule" id="verification"><div><h2>Verify the candidate</h2><ol class="steps"><li><strong>Open the app in two browsers.</strong><span>Use Civitai.com and Civitai.red with a reachable direct network path.</span></li><li><strong>Send a small JSON or text fixture.</strong><span>Exchange the offer and reply in private chat. Verify the saved file and observe the receipt.</span></li><li><strong>Check both cutoff paths.</strong><span>Finish the last receipt and check closure. The browser regression suite also advances a test clock to the 24-hour deadline.</span></li></ol></div><div class="callout"><h3>Release materials</h3><p>The validation records identify the app build, fixture host, browser versions, byte limits and exact saved digests.</p><ul class="links"><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/CIVITAI_APP_BOX.md">App-box evidence ↗</a></li><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki/Review-and-Verification">Reviewer walkthrough ↗</a></li><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Project support ↗</a></li></ul></div></section>
+    <section class="section rule readable"><h2>Platform permissions</h2><p>The manifest requests zero account scopes. The App Block uses the native resource picker, the file save bridge, and the share or route hooks when the host provides them. Each user opens the app in a browser they already have.</p><p>GitHub Pages and the Wiki host project documentation and review materials. Live file transfers run in the Civitai app.</p></section>
+  </main>
+  <footer class="foot"><div class="wrap bar"><p>SAFE Handoff <span>Independent Civitai App Block</span></p><nav aria-label="Project"><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki">Wiki</a><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Support</a><a href="../guide/">Guide</a></nav></div></footer>
+</body>
+</html>

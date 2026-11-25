@@ -1,0 +1,32 @@
+{
+  "archive": "dist/civitai-safe-handoff-0.2.0-submission.zip",
+  "sha256": "c0f8516b662b477164ca2749fc81c6e6b3ab84b9dbf1589538f6441764e61700",
+  "cli": "0.1.150",
+  "reproducible": true,
+  "entries": {
+    "REVIEW.md": {
+      "sha256": "87c7ec41167ff07ffbbbe50a6a99b446566d44f3d0e0c472b021b40c4ee5423b",
+      "bytes": 1573
+    },
+    "assets/pickup.png": {
+      "sha256": "aaeea4d968406e3754dde31b03bd168707da22e526484fa33536d670d9e08e7a",
+      "bytes": 14201
+    },
+    "assets/receipts.png": {
+      "sha256": "0d52c2a1fb63b383a5687be8e502436ce24cabd6a0a9af6870ff9b51fe479ec1",
+      "bytes": 28763
+    },
+    "assets/sender.png": {
+      "sha256": "1bb4a70e5676668323c473e96faa35a05d597604506f9b33dc4b2ce1215536f4",
+      "bytes": 96272
+    },
+    "block.manifest.json": {
+      "sha256": "fd881a6e038e380075158b0d4a64f69b066e829fc7b13a87cf2899d50435a831",
+      "bytes": 843
+    },
+    "index.html": {
+      "sha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+      "bytes": 121182
+    }
+  }
+}

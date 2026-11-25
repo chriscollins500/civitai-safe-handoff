@@ -1,0 +1,18 @@
+{
+  "sha256": "cf7af0669ada033e853044985ad21e5d0b15d9c005bd5fa74fd7736f5f09e7eb",
+  "rebuiltIdentically": true,
+  "archiveBytes": 30686,
+  "files": [
+    {
+      "path": "block.manifest.json",
+      "bytes": 705,
+      "sha256": "2b1b5d63660df2763156148897ad70d7047b0614002f5928caabdb193e57da1e"
+    },
+    {
+      "path": "index.html",
+      "bytes": 107371,
+      "sha256": "768cc6b41cf86b3b19a60cf7faa3a13f9596669b1681bc8db6f0bb342f5fda3c"
+    }
+  ],
+  "civitaiCLI": "0.1.150"
+}

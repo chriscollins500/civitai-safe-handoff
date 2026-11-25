@@ -1,0 +1,15 @@
+{
+  "$schema": "https://civitai.com/schemas/app-block/v1.json",
+  "blockId": "civitai-safe-handoff",
+  "version": "0.2.0",
+  "name": "Civitai SAFE Handoff",
+  "tagline": "Share supported files directly and pin exact Civitai resources.",
+  "description": "Send supported files to up to 20 collaborators in Civitai chat and see who verified a saved copy. Both browsers stay online. Temporary pickup data clears after 24 hours or the last verified receipt. Pin exact Civitai resources and export dependency JSON.",
+  "repository": "https://github.com/chriscollins500/civitai-safe-handoff",
+  "category": "utility",
+  "contentRating": "pg13",
+  "scopes": [],
+  "renderMode": "iframe",
+  "iframe": { "sandbox": "allow-scripts", "minHeight": 360, "maxHeight": null, "resizable": false },
+  "page": { "path": "/", "title": "Civitai SAFE Handoff" }
+}

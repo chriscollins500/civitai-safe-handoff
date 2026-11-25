@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="File types, size and network requirements, and verified browser coverage for SAFE Handoff.">
+  <title>Limits and compatibility | Civitai SAFE Handoff</title><link rel="icon" href="../assets/icon.png"><link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top"><div class="wrap bar"><a class="brand" href="../"><img src="../assets/icon.png" width="36" height="36" alt="">SAFE Handoff</a><nav aria-label="Main"><a href="../guide/">Guide</a><a href="./" aria-current="page">Limits</a><a href="../review/">Review kit</a><a href="https://github.com/chriscollins500/civitai-safe-handoff">GitHub ↗</a></nav></div></header>
+  <main class="wrap content" id="main">
+    <div class="page-intro"><p class="eyebrow">Compatibility</p><h1>Know what can travel.</h1><p class="lead">Civitai’s save bridge accepts specific file types. Both browsers also need a direct network route.</p></div>
+    <section class="section rule" aria-labelledby="formats"><h2 id="formats">File limits</h2>
+      <table><caption>Civitai save formats supported by SAFE Handoff</caption><thead><tr><th scope="col">File</th><th scope="col">Maximum</th><th scope="col">Details</th></tr></thead><tbody>
+        <tr><th scope="row">ZIP</th><td>256 MiB</td><td>Allowed archive entries only. Build one ZIP from up to 25 files.</td></tr>
+        <tr><th scope="row">GLB, FBX</th><td>100 MiB</td><td>Valid binary 3D model files.</td></tr>
+        <tr><th scope="row">JSON, TXT</th><td>50 MiB</td><td>Plain text and valid JSON.</td></tr>
+        <tr><th scope="row">PNG, JPEG, WebP</th><td>50 MiB</td><td>The extension must match the image format.</td></tr>
+      </tbody></table>
+      <p class="body-copy">ZIP members follow the Civitai save validator. The app checks names, formats and archive size before sending. For published model weights, share model pins so collaborators can retrieve files through Civitai.</p>
+    </section>
+    <section class="section split rule"><div><h2>Direct network required</h2><p class="body-copy">Files move over a WebRTC data channel between the two active browsers. The app configures host candidates and has no relay. A shared network is the best place to start. Some networks and browser privacy settings prevent a direct connection.</p></div><div class="callout"><h3>If the connection stops</h3><p>Keep the sender tab open. Create a fresh offer for the affected recipient and repeat the exchange while the handoff is active.</p><a class="text-link" href="../guide/#recipient">Return to the pickup guide →</a></div></section>
+    <section class="section rule readable"><h2>What the browser tests covered</h2><p>Chrome, Edge and Firefox were exercised on Windows using real browsers and an opaque, sandboxed fixture for the Civitai host. Chrome-to-Firefox testing used separate browser processes. The test saved bytes to disk and verified their digest.</p><p>The release uses Civitai’s host save contract. Step-by-step live qualification on the published candidate depends on Civitai review and access to the App Store. See the review kit for exact build hashes and test scope.</p><a class="text-link" href="../review/#verification">Read the candidate evidence →</a></section>
+  </main>
+  <footer class="foot"><div class="wrap bar"><p>SAFE Handoff <span>Independent Civitai App Block</span></p><nav aria-label="Project"><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki">Wiki</a><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Support</a><a href="../review/">Review kit</a></nav></div></footer>
+</body>
+</html>

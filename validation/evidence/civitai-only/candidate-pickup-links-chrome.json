@@ -1,0 +1,23 @@
+{
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "evidence": [
+    {
+      "site": "https://civitai.com",
+      "loadedBy": "BLOCK_INIT",
+      "linkCharacters": 877,
+      "fragmentOnly": true,
+      "requiredExplicitReply": true,
+      "verifiedSave": true
+    },
+    {
+      "site": "https://civitai.red",
+      "loadedBy": "ROUTE_CHANGED",
+      "linkCharacters": 865,
+      "fragmentOnly": true,
+      "requiredExplicitReply": true,
+      "verifiedSave": true
+    }
+  ]
+}

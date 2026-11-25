@@ -1,0 +1,42 @@
+{
+  "kind": "zip",
+  "size": 268435456,
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "768cc6b41cf86b3b19a60cf7faa3a13f9596669b1681bc8db6f0bb342f5fda3c",
+  "guestBrowser": "chrome",
+  "guestVersion": "158.0.8127.89",
+  "separateBrowserProcesses": true,
+  "referenceAndSavedSha256": "74bceed4a0c62c173e091369f7c2c7cace9353d5d9cde2f4b9be1b19ba56f01c",
+  "receivedMs": 42512,
+  "diskVerifiedMs": 46706,
+  "receiptMs": 50516,
+  "memory": [
+    {
+      "stage": "before-selecting-file",
+      "senderPrivateBytes": 301445120,
+      "guestPrivateBytes": 301957120
+    },
+    {
+      "stage": "received-before-save",
+      "senderPrivateBytes": 393703424,
+      "guestPrivateBytes": 629972992
+    },
+    {
+      "stage": "saved-before-guest-verification",
+      "senderPrivateBytes": 350859264,
+      "guestPrivateBytes": 1443524608
+    },
+    {
+      "stage": "after-receipt",
+      "senderPrivateBytes": 371179520,
+      "guestPrivateBytes": 1626386432
+    }
+  ],
+  "nativeAppFrame": "simulated allow-scripts sandbox",
+  "hostValidator": "@civitai/app-sdk@0.93.0",
+  "oneByteOverRejectedBeforeSend": true,
+  "verifiedSave": true,
+  "closedAfterReceipt": true,
+  "saveBridge": "structured clone"
+}

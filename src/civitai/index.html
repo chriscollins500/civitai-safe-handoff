@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Civitai SAFE Handoff</title>
+    <!--SAFE_STYLE-->
+  </head>
+  <body>
+    <main class="shell stack">
+      <div class="intro">
+        <h1>Civitai SAFE Handoff</h1>
+        <p class="muted">Send files directly to your collaborators. Check who saved their copy.</p>
+        <nav class="app-shortcuts" aria-label="Handoff shortcuts">
+          <a href="#send">Send files</a><a href="#pickup">Pick up a file</a><a href="#dependencies">Pin models</a>
+        </nav>
+      </div>
+      <section class="live-section" id="live-pickup" aria-label="Live file handoff">
+        <p class="handoff-note">Keep both tabs open. Handoffs expire after <strong>24 hours</strong> or as soon as everyone verifies their save.</p>
+        <div class="grid">
+          <section class="panel" id="send" aria-labelledby="send-title">
+            <h2 id="send-title">Send files</h2>
+            <div class="stack" id="live-sender-summary">
+              <p class="status" role="status" id="live-sender-status"></p>
+              <div class="records" id="live-sender-rows"></div>
+            </div>
+            <div class="stack" id="live-sender-form">
+              <label class="field">Files or ZIP <input type="file" id="live-source" multiple aria-describedby="file-hint"></label>
+              <p class="quiet muted field-hint" id="file-hint">Choose up to 25 files. ZIPs up to 256 MiB.</p>
+              <label class="field">Recipients <textarea id="live-recipients" rows="2" placeholder="One name per line" aria-describedby="recipients-hint"></textarea></label>
+              <p class="quiet muted field-hint" id="recipients-hint">Enter up to 20 names, one per line. These labels are for your receipts.</p>
+              <button type="button" class="button primary" id="live-start" disabled>Prepare handoff</button>
+            </div>
+          </section>
+          <section class="panel" id="pickup" aria-labelledby="pickup-title">
+            <h2 id="pickup-title">Pick up a file</h2>
+            <div class="stack" id="live-receiver-form">
+              <p class="muted">Open the sender’s pickup link or paste their offer code from private Civitai chat.</p>
+              <label class="field">Pickup offer <textarea id="live-offer" rows="2"></textarea></label>
+              <button type="button" class="button primary" id="live-accept" disabled>Create pickup reply</button>
+            </div>
+            <p class="status" role="status" id="live-receiver-status"></p>
+            <div class="stack" id="live-receiver-area"></div>
+          </section>
+        </div>
+      </section>
+      <section class="panel" id="dependencies">
+        <h2>Pin Civitai models</h2>
+        <div class="actions">
+          <button type="button" id="checkpoint" class="button primary" disabled>Choose checkpoint</button>
+          <button type="button" id="lora" class="button" disabled>Choose LoRAs</button>
+        </div>
+        <ul id="picks" class="files"></ul>
+        <label class="field">Dependency pins <textarea id="manifest" rows="7" readonly></textarea></label>
+        <div class="actions">
+          <button type="button" id="copy" class="button" disabled>Select pins to copy</button>
+          <button type="button" id="save-pins" class="button" disabled>Save dependency JSON</button>
+          <button type="button" id="clear" class="button" disabled>Clear selection</button>
+        </div>
+        <p id="status" class="status" role="status">Waiting for the Civitai host…</p>
+        <p class="muted quiet">Copy the pins into a handoff message or save them as a JSON file.</p>
+      </section>
+    </main>
+    <!--SAFE_SCRIPT-->
+  </body>
+</html>

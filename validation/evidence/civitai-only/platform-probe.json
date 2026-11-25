@@ -1,0 +1,56 @@
+{
+  "checkedOn": "2026-11-24",
+  "publicCatalog": [
+    {
+      "host": "civitai.com",
+      "existingApp": "civitai-metadata-studio",
+      "existingStatus": 200,
+      "candidate": "civitai-safe-handoff",
+      "candidateStatus": 404
+    },
+    {
+      "host": "civitai.red",
+      "existingApp": "civitai-metadata-studio",
+      "existingStatus": 200,
+      "candidate": "civitai-safe-handoff",
+      "candidateStatus": 404
+    }
+  ],
+  "existingAppFrame": {
+    "host": "civitai-metadata-studio.civit.ai",
+    "status": 200,
+    "allowedParentDomainsObserved": [
+      "civitai.com",
+      "civitai.red"
+    ]
+  },
+  "chromiumProbe": {
+    "browser": "Chrome 158.0.8127.89",
+    "independentProfiles": 2,
+    "simulatedParentOrigins": [
+      "https://civitai.com",
+      "https://civitai.red"
+    ],
+    "sandbox": "allow-scripts",
+    "opaqueOrigin": true,
+    "secureContext": true,
+    "injectedIceServers": 0,
+    "dataEchoBytes": 39,
+    "selectedCandidateTypes": [
+      "host",
+      "host"
+    ],
+    "directDeviceSave": "SecurityError",
+    "originPrivateFileSystem": "SecurityError"
+  },
+  "webkitProbe": {
+    "browser": "Playwright WebKit 27.2",
+    "platform": "Windows",
+    "secureContext": true,
+    "opaqueOrigin": true,
+    "peerConnection": "undefined",
+    "compression": "function",
+    "decompression": "function",
+    "crypto": "object"
+  }
+}

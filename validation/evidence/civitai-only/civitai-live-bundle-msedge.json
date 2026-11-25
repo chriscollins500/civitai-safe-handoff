@@ -1,0 +1,32 @@
+{
+  "browser": "msedge",
+  "browserVersion": "158.0.4370.33",
+  "buildSha256": "768cc6b41cf86b3b19a60cf7faa3a13f9596669b1681bc8db6f0bb342f5fda3c",
+  "size": 131459,
+  "sha256": "86ebce6982c196bbef83fc99769bfac0b6bd643060280beb13e5cd54a0a12419",
+  "files": [
+    {
+      "name": "synthetic-workflow.json",
+      "size": 131097,
+      "sha256": "e845dd4ce78f3e4c1c0062c93653af0a5490984dbcd7eb0f644f1b8f18753a92"
+    },
+    {
+      "name": "caption-風.txt",
+      "size": 18,
+      "sha256": "bd7b36ce14632c667b20903a217e007cfe980a814c31d92d29ddb3dc7d78ddc1"
+    },
+    {
+      "name": "empty.txt",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "authorBundledInBrowser": true,
+  "allOriginalBytesVerifiedOnDisk": true,
+  "archiveReceipt": true,
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "hostContract": "simulated"
+}

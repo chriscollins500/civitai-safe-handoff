@@ -1,0 +1,41 @@
+{
+  "kind": "glb",
+  "size": 104857600,
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "768cc6b41cf86b3b19a60cf7faa3a13f9596669b1681bc8db6f0bb342f5fda3c",
+  "guestBrowser": "chrome",
+  "guestVersion": "158.0.8127.89",
+  "separateBrowserProcesses": true,
+  "referenceAndSavedSha256": "1b72ff0bab36377e6659bbc58f727b3ce6fbabcb70795223afb6cbbfa47671fa",
+  "receivedMs": 13520,
+  "diskVerifiedMs": 15463,
+  "receiptMs": 17208,
+  "memory": [
+    {
+      "stage": "before-selecting-file",
+      "senderPrivateBytes": 306597888,
+      "guestPrivateBytes": 306561024
+    },
+    {
+      "stage": "received-before-save",
+      "senderPrivateBytes": 352018432,
+      "guestPrivateBytes": 484876288
+    },
+    {
+      "stage": "saved-before-guest-verification",
+      "senderPrivateBytes": 346660864,
+      "guestPrivateBytes": 805593088
+    },
+    {
+      "stage": "after-receipt",
+      "senderPrivateBytes": 368394240,
+      "guestPrivateBytes": 805294080
+    }
+  ],
+  "nativeAppFrame": "simulated allow-scripts sandbox",
+  "hostValidator": "@civitai/app-sdk@0.93.0",
+  "oneByteOverRejectedBeforeSend": true,
+  "verifiedSave": true,
+  "closedAfterReceipt": true
+}

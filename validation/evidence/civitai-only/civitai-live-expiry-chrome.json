@@ -1,0 +1,13 @@
+{
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "768cc6b41cf86b3b19a60cf7faa3a13f9596669b1681bc8db6f0bb342f5fda3c",
+  "simulatedElapsedMilliseconds": 86400000,
+  "hostOrigins": [
+    "https://civitai.red",
+    "https://civitai.com"
+  ],
+  "activeChannelClosed": true,
+  "unsavedBytesRemovedFromGuestView": true,
+  "hostSavesAfterCutoff": 0
+}

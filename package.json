@@ -1,0 +1,26 @@
+{
+  "name": "civitai-safe-handoff",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=26.13.0"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build:civitai": "node scripts/build-civitai.mjs",
+    "test:browser": "node --test --test-concurrency=1 test/browser/civitai.test.ts test/browser/civitai-live.test.ts",
+    "test:site": "node --test test/browser/civitai-site.test.ts"
+  },
+  "dependencies": {
+    "@civitai/app-sdk": "0.93.0",
+    "@noble/hashes": "2.4.0",
+    "fflate": "0.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "esbuild": "0.28.2",
+    "playwright": "1.65.1",
+    "typescript": "7.0.2"
+  }
+}
