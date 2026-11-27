@@ -1,0 +1,37 @@
+{
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "guestBrowser": "chrome",
+  "guestVersion": "158.0.8127.89",
+  "separateBrowserProcesses": false,
+  "buildSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "sandbox": "allow-scripts",
+  "opaqueSandbox": true,
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "hostContract": "simulated",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "noHorizontalOverflow": true,
+  "keyboardPreparationAndSave": true,
+  "referenceBytes": 131097,
+  "sourceAndSavedSha256": "e845dd4ce78f3e4c1c0062c93653af0a5490984dbcd7eb0f644f1b8f18753a92",
+  "verifiedSavedRecipients": 3,
+  "crossInvitationReplyRejected": true,
+  "wrongDiskFileRejected": true,
+  "cutoffOnLastReceipt": true,
+  "offerCharacters": [
+    816,
+    821,
+    813
+  ],
+  "replyCharacters": [
+    796,
+    794,
+    789
+  ]
+}

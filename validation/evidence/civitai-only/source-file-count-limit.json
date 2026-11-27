@@ -1,0 +1,9 @@
+{
+  "runner": "v26.13.0",
+  "check": "Civitai ZIP source helper",
+  "filesBundled": 25,
+  "allEntriesMatched": true,
+  "twentySixthFileRejected": true,
+  "archiveBytes": 2942,
+  "archiveSha256": "26829fcaa61d4758bede42675c417e76b5ae9b1391880a9b018a6907f20d4e69"
+}

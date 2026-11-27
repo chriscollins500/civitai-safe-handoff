@@ -1,0 +1,22 @@
+{
+  "kind": "glb",
+  "size": 104857600,
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "guestBrowser": "chrome",
+  "guestVersion": "158.0.8127.89",
+  "separateBrowserProcesses": true,
+  "referenceAndSavedSha256": "1b72ff0bab36377e6659bbc58f727b3ce6fbabcb70795223afb6cbbfa47671fa",
+  "receivedMs": 25278,
+  "diskVerifiedMs": 51567,
+  "receiptMs": 53005,
+  "nativeAppFrame": "simulated allow-scripts sandbox",
+  "hostValidator": "@civitai/app-sdk@0.93.0",
+  "oneByteOverRejectedBeforeSend": true,
+  "verifiedSave": true,
+  "closedAfterReceipt": true,
+  "saveBridge": "transfer list",
+  "refusedFirstSave": true,
+  "resentOnSameConnection": true
+}

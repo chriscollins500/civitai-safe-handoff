@@ -31,6 +31,7 @@ const pairing = configuredBrowser === configuredGuest ? configuredBrowser : conf
 const boundary = process.env.SAFE_CIVITAI_LIVE_BOUNDARY;
 const retryBoundarySave = process.env.SAFE_CIVITAI_VERIFY_SAVE_RETRY === '1';
 const captureScreenshots = process.env.SAFE_CIVITAI_CAPTURE_SCREENSHOTS === '1';
+const narrowViewport = process.env.SAFE_CIVITAI_NARROW === '1' ? { width: 390, height: 844 } : undefined;
 
 async function launch(kind = configuredBrowser) {
   if (kind === 'firefox') return firefox.launch();
@@ -103,7 +104,7 @@ interface Mounted {
 }
 
 async function mount(browser: Browser, site: string, block: string, script: string, path = '/', clock = false): Promise<Mounted> {
-  const profile = await browser.newContext({ acceptDownloads: true });
+  const profile = await browser.newContext({ acceptDownloads: true, ...(narrowViewport ? { viewport: narrowViewport } : {}) });
   const html = `<!doctype html><iframe title="${label}" sandbox="allow-scripts" src="${blockOrigin}" width="100%" height="2000"></iframe><script>${script}</script>`;
   await profile.route('**/*', (route) => {
     if ([site + '/', site + runPath].includes(route.request().url())) return route.fulfill({ contentType: 'text/html', body: html });
@@ -124,8 +125,14 @@ async function mount(browser: Browser, site: string, block: string, script: stri
 
 async function prepare(sender: Mounted, recipients: string) {
   await sender.frame.getByLabel('Files or ZIP').setInputFiles({ name, mimeType: 'application/json', buffer: reference });
-  await sender.frame.getByLabel('Recipients', { exact: true }).fill(recipients);
-  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).click();
+  const recipientField = sender.frame.getByLabel('Recipients', { exact: true });
+  await recipientField.fill(recipients);
+  const prepareButton = sender.frame.getByRole('button', { name: 'Prepare handoff' });
+  if (narrowViewport) {
+    await recipientField.press('Tab');
+    assert.equal(await sender.frame.evaluate(() => document.activeElement?.id), 'live-start');
+    await sender.page.keyboard.press('Enter');
+  } else await prepareButton.click();
   try {
     await sender.frame.waitForFunction(() => {
       const output = document.querySelector('#live-sender-status');
@@ -139,6 +146,14 @@ async function prepare(sender: Mounted, recipients: string) {
 
 function recipientRow(sender: Mounted, name: string) {
   return sender.frame.getByRole('article').filter({ has: sender.frame.getByRole('heading', { name, exact: true }) });
+}
+
+async function assertContentFits(app: Mounted) {
+  const { width, scrollWidth } = await app.frame.evaluate(() => ({
+    width: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  assert.ok(width < 680 && scrollWidth <= width, `${app.site} iframe width ${width}, content width ${scrollWidth}`);
 }
 
 async function prepareReply(sender: Mounted, guest: Mounted, name: string) {
@@ -166,6 +181,7 @@ async function verifyGuest(guest: Mounted, wrongFile = false, screenshot = false
   const download = guest.page.waitForEvent('download');
   const save = guest.frame.getByRole('button', { name: 'Save file', exact: true });
   if (wrongFile) await save.evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
+  else if (narrowViewport) await save.press('Enter');
   else await save.click();
   const saved = await download;
   assert.equal(saved.suggestedFilename(), name);
@@ -199,6 +215,7 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
   ]);
   const opaqueSandbox = await a.frame.evaluate(() => window.origin === 'null' && window.isSecureContext);
   assert.ok(opaqueSandbox);
+  if (narrowViewport) await Promise.all([sender, a, b, c].map(assertContentFits));
   await prepare(sender, 'Guest A\nGuest B\nGuest C');
   if (captureScreenshots) {
     await mkdir('site/assets', { recursive: true });
@@ -215,6 +232,7 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
   for (const [guest, name, index] of [[a, 'Guest A', 0], [b, 'Guest B', 1], [c, 'Guest C', 2]] as const) {
     await connect(sender, name, offers[index].reply);
     await guest.frame.getByRole('button', { name: 'Save file', exact: true }).waitFor();
+    if (narrowViewport) await assertContentFits(guest);
     assert.equal(await recipientRow(sender, name).getByText(/^Verified save ·/).count(), 0);
     await verifyGuest(guest, index === 0, captureScreenshots && index === 0);
     await recipientRow(sender, name).getByText('Verified save ·').waitFor();
@@ -230,12 +248,55 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
     browser: configuredBrowser, browserVersion: browser.version(), guestBrowser: configuredGuest, guestVersion: guestBrowser.version(),
     separateBrowserProcesses: guestBrowser !== browser, buildSha256: digest(Buffer.from(block)),
     sandbox: 'allow-scripts', opaqueSandbox, hostOrigins: [siteCom, siteRed], hostContract: 'simulated',
+    ...(narrowViewport ? { viewport: narrowViewport, noHorizontalOverflow: true, keyboardPreparationAndSave: true } : {}),
     referenceBytes: reference.length, sourceAndSavedSha256: expected, verifiedSavedRecipients: 3,
     crossInvitationReplyRejected: true, wrongDiskFileRejected: true, cutoffOnLastReceipt: true,
     offerCharacters: offers.map((item) => item.offer.length), replyCharacters: offers.map((item) => item.reply.length),
   };
   await mkdir('.validation', { recursive: true });
-  await writeFile('.validation/civitai-live-' + pairing + '.json', JSON.stringify(evidence, null, 2) + '\n');
+  await writeFile('.validation/civitai-live-' + pairing + (narrowViewport ? '-narrow' : '') + '.json', JSON.stringify(evidence, null, 2) + '\n');
+  console.log(JSON.stringify(evidence));
+});
+
+test('the Civitai-only app completes all twenty recipient slots and refuses a twenty-first', {
+  skip: process.env.SAFE_CIVITAI_LIVE_CAPACITY !== '1', timeout: 150000,
+}, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const script = await hostScript();
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const sender = await mount(browser, siteCom, block, script);
+  const names = Array.from({ length: 20 }, (_, index) => `Capacity guest ${index + 1}`);
+  await sender.frame.getByLabel('Files or ZIP').setInputFiles({ name, mimeType: 'application/json', buffer: reference });
+  await sender.frame.getByLabel('Recipients', { exact: true }).fill([...names, 'Overflow guest'].join('\n'));
+  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).click();
+  await sender.frame.getByText('Enter 1 to 20 distinct recipients, one per line.').waitFor();
+  assert.equal(await sender.frame.getByRole('article').count(), 0);
+
+  await prepare(sender, names.join('\n'));
+  assert.equal(await sender.frame.getByRole('article').count(), names.length);
+  const offers = new Set<string>();
+  for (const [index, guestName] of names.entries()) {
+    const guest = await mount(browser, index % 2 ? siteCom : siteRed, block, script);
+    try {
+      const ticket = await prepareReply(sender, guest, guestName);
+      offers.add(ticket.offer);
+      await connect(sender, guestName, ticket.reply);
+      await verifyGuest(guest);
+      await recipientRow(sender, guestName).getByText('Verified save ·').waitFor();
+      if (index < names.length - 1) assert.ok(await sender.frame.getByRole('button', { name: 'Close handoff' }).isEnabled());
+    } finally {
+      await guest.page.context().close();
+    }
+  }
+  assert.equal(offers.size, names.length);
+  await sender.frame.getByText('All recipients verified their saves. This handoff is closed.').waitFor();
+  assert.equal(await sender.frame.getByText(/^Verified save ·/).count(), names.length);
+  const evidence = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
+    hostContract: 'simulated', hostOrigins: [siteCom, siteRed], distinctRecipientProfiles: names.length,
+    verifiedSavedRecipients: names.length, distinctOffers: offers.size, twentyFirstRecipientRejected: true,
+    cutoffOnLastReceipt: true, referenceBytes: reference.length, sourceAndSavedSha256: expected };
+  await writeFile('.validation/civitai-live-capacity-' + configuredBrowser + '.json', JSON.stringify(evidence, null, 2) + '\n');
   console.log(JSON.stringify(evidence));
 });
 

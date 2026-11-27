@@ -1,0 +1,29 @@
+{
+  "recordedAt": "2026-11-27T00:37:04.998Z",
+  "version": "0.2.0",
+  "signedOutRunRoutes": [
+    {
+      "url": "https://civitai.com/apps/run/civitai-safe-handoff",
+      "httpStatus": 404
+    },
+    {
+      "url": "https://civitai.red/apps/run/civitai-safe-handoff",
+      "httpStatus": 404
+    }
+  ],
+  "authenticatedLauncher": {
+    "url": "https://civitai.red/apps/run/civitai-safe-handoff",
+    "browser": "Chrome on Windows",
+    "observation": "Visible accessibility tree of native browser window",
+    "hostedIframe": "https://civitai-safe-handoff.civit.ai/",
+    "enabledControls": [
+      "Prepare handoff",
+      "Create pickup reply",
+      "Choose checkpoint",
+      "Choose LoRAs"
+    ]
+  },
+  "authenticatedCivitaiComLaunch": "Unverified",
+  "productionPickup": "Unverified",
+  "separateDevicePickup": "Pending"
+}

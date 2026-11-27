@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-27T00:32:24.555Z",
+  "version": "0.2.0",
+  "sourceZipSha256": "c0f8516b662b477164ca2749fc81c6e6b3ab84b9dbf1589538f6441764e61700",
+  "hostedPageSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "hostedPageBytes": 121182,
+  "liveUrl": "https://civitai-safe-handoff.civit.ai/",
+  "listingId": "apl_01M888V084KDFV0VZHB4QGABVW",
+  "appBlockId": "apb_01M8D50A9903C5VXWMAZ706SHW",
+  "catalogOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "frameAncestors": [
+    "frame-ancestors",
+    "https://civitai.com",
+    "https://*.civitai.com",
+    "https://*.civitaic.com",
+    "https://civitai.red",
+    "https://*.civitai.red",
+    "https://civitai.green",
+    "https://*.civitai.green"
+  ],
+  "screenshots": 3
+}

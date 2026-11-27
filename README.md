@@ -2,6 +2,8 @@
 
 Browser-only creator file sharing inside Civitai. Send a supported file to up to 20 recipients and see a separate receipt each time someone verifies the file they saved. The app clears temporary pickup data at 24 hours or the final verified save, whichever comes first.
 
+**v0.2.0 is live on Civitai.** Sign in on your preferred domain and open the app from the App Store. The [deployment record](validation/evidence/civitai-only/v0.2.0-live-deployment.json) matches the published HTML to the submitted bundle.
+
 [Project website](https://chriscollins500.github.io/civitai-safe-handoff/) · [User guide](https://chriscollins500.github.io/civitai-safe-handoff/guide/) · [Wiki](https://github.com/chriscollins500/civitai-safe-handoff/wiki) · [App screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/#screenshots)
 
 ## How it works

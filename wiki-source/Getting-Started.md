@@ -2,7 +2,7 @@
 
 ## Send a file
 
-1. Open SAFE Handoff in the Civitai App Store. Start from [Civitai.com](https://civitai.com/) or [Civitai.red](https://civitai.red/) and sign in if the store asks for your account.
+1. Start from [Civitai.com](https://civitai.com/) or [Civitai.red](https://civitai.red/) and sign in. Find **Civitai SAFE Handoff** in the App Store and choose **Open**.
 2. Select one file or up to 25 files to bundle into a ZIP. Enter up to 20 recipients, one name per line, and choose **Prepare handoff**.
 3. Under each person's name, choose **Create pickup offer**. Use **Copy pickup link** when available and send it in that person's private Civitai chat. Otherwise copy the offer code. If a code has several lines, send each line separately in order.
 4. Paste the recipient's reply into their row and choose **Connect recipient**. Keep the sender tab open until you see **Verified save** for everyone who should get a copy.

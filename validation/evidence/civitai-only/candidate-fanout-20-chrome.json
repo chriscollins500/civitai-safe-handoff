@@ -1,0 +1,17 @@
+{
+  "browser": "chrome",
+  "browserVersion": "158.0.8127.89",
+  "buildSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "hostContract": "simulated",
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "distinctRecipientProfiles": 20,
+  "verifiedSavedRecipients": 20,
+  "distinctOffers": 20,
+  "twentyFirstRecipientRejected": true,
+  "cutoffOnLastReceipt": true,
+  "referenceBytes": 131097,
+  "sourceAndSavedSha256": "e845dd4ce78f3e4c1c0062c93653af0a5490984dbcd7eb0f644f1b8f18753a92"
+}

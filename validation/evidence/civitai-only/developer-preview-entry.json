@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-25T02:40:48.233Z",
+  "cli": "0.1.150",
+  "submittedPageSha256": "6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a",
+  "appBridgeSession": "requires author browser session",
+  "responses": [
+    {
+      "status": 401,
+      "target": "Temporary Civitai developer asset host"
+    },
+    {
+      "url": "https://civitai.com/apps/dev/civitai-safe-handoff",
+      "status": 404
+    },
+    {
+      "url": "https://civitai.red/apps/dev/civitai-safe-handoff",
+      "status": 404
+    }
+  ],
+  "tunnelStoppedWithCtrlC": true,
+  "sessionTests": "Author browser access required",
+  "loopbackListenersClosed": true
+}

@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-27T00:32:26.2472898Z",
+  "version": "0.2.0",
+  "reviewStatus": "approved",
+  "deployState": "live",
+  "sourceCommit": "7ea896421e9cac3a5c258e1680a8a6e730633432",
+  "sourceDirty": false,
+  "screenshotCount": 3,
+  "listingStatus": "approved",
+  "evidencePage": "https://chriscollins500.github.io/civitai-safe-handoff/review/",
+  "wiki": "https://github.com/chriscollins500/civitai-safe-handoff/wiki",
+  "iconAttached": true,
+  "coverAttached": true,
+  "publishFloorMet": true,
+  "liveUrl": "https://civitai-safe-handoff.civit.ai/",
+  "reviewedAt": "2026-11-27T00:03:11.767Z"
+}

@@ -9,6 +9,6 @@ SAFE Handoff is an on-site Civitai App Block. Use it to send a workflow, image, 
 | [Compatibility](Compatibility) | Supported formats, sizes, and direct network requirements. |
 | [Review and verification](Review-and-Verification) | Screenshots, exact-build evidence, and the reviewer workflow. |
 
-The app runs on Civitai.com and Civitai.red. App Store access depends on your Civitai account and the listing's availability. Keep the sender and recipient tabs open until the pickup and receipt finish.
+Version 0.2.0 is live in the Civitai.com and Civitai.red catalogs. Sign in on your preferred domain and open SAFE Handoff from the App Store. Keep the sender and recipient tabs open until the pickup and receipt finish.
 
 [Project site](https://chriscollins500.github.io/civitai-safe-handoff/) · [Support and feedback](https://github.com/chriscollins500/civitai-safe-handoff/issues)
