@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-11-27T01:56:31.2072206Z",
+  "buildSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+  "hostContract": "simulated",
+  "buildChecked": true,
+  "nodeTests": {
+    "passed": 24,
+    "skippedOptionalStorage": 2,
+    "failed": 0
+  },
+  "edge": {
+    "version": "158.0.4370.45",
+    "passed": 17,
+    "failed": 0,
+    "skippedSeparateNonInterruptedBoundary": 1,
+    "separateInterrupted256Mib": "passed",
+    "distinctVerifiedRecipients": 20
+  },
+  "firefox": {
+    "version": "159.0",
+    "passed": 8,
+    "failed": 0,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "matchedControl": {
+    "archiveBytes": 8388608,
+    "interruptAfterBytes": 2097152,
+    "versions": [
+      "0.3.0",
+      "0.4.0"
+    ],
+    "heldConstant": [
+      "browser within each pair",
+      "source bytes and paths",
+      "receiver cut point",
+      "first-save refusal",
+      "disk SHA-256 check"
+    ],
+    "observedDifference": "v0.3.0 resumed at byte zero. v0.4.0 resumed at byte 2097152."
+  },
+  "legacyVersion": "0.2.0",
+  "legacyBidirectionalDiskSave": "passed",
+  "explicitDiscardAndSiblingIsolation": "passed in Firefox",
+  "originalResumeDeadlineAndReplay": "passed",
+  "screenshots": [
+    {
+      "name": "v0.4.0-archive-preview.png",
+      "sha256": "0669c6898beaff56ecf7015e90a9c5550347257ce418e8c14ba99ba728c28c5e"
+    },
+    {
+      "name": "v0.4.0-batch-receipts.png",
+      "sha256": "ffa35b5e8b5d81259a630b73cd612cb0bed9039a86fbbc2958c975c9e9637d6d"
+    },
+    {
+      "name": "v0.4.0-resume-prompt.png",
+      "sha256": "8d1df97daca4bdd1aba1808123a26780b75f4eca1c2032e5ef058d1209af5992"
+    }
+  ]
+}

@@ -28,5 +28,11 @@ body {
 .live-section .button.primary { background: #a8edd9; border-color: #a8edd9; color: #132322; }
 .live-section .button.primary:hover { background: #cbf8e9; }
 .live-section .field textarea[readonly], .live-section .field input[readonly] { font: .8rem ui-monospace, monospace; }
+.live-section summary { width: fit-content; cursor: pointer; }
+.live-section details[open] > summary { margin-bottom: 12px; }
+#requested-file-list { margin: 0; padding-inline-start: 1.35rem; overflow-wrap: anywhere; }
+.live-package { gap: 6px; overflow-wrap: anywhere; }
+.package-entries { margin: 8px 0 0; padding-inline-start: 1.35rem; }
+#live-sender-preview:empty { display: none; }
 #live-receiver-area h3 { overflow-wrap: anywhere; }
 @media (max-width: 680px) { .live-section .grid { grid-template-columns: minmax(0, 1fr); } }

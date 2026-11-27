@@ -1,0 +1,17 @@
+{
+  "browser": "msedge",
+  "browserVersion": "158.0.4370.45",
+  "buildSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+  "hostContract": "simulated",
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "distinctRecipientProfiles": 20,
+  "verifiedSavedRecipients": 20,
+  "distinctOffers": 20,
+  "twentyFirstRecipientRejected": true,
+  "cutoffOnLastReceipt": true,
+  "referenceBytes": 131097,
+  "sourceAndSavedSha256": "e845dd4ce78f3e4c1c0062c93653af0a5490984dbcd7eb0f644f1b8f18753a92"
+}

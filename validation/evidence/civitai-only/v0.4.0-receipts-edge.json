@@ -1,0 +1,33 @@
+{
+  "browser": "msedge",
+  "browserVersion": "158.0.4370.45",
+  "guestBrowser": "msedge",
+  "guestVersion": "158.0.4370.45",
+  "separateBrowserProcesses": false,
+  "buildSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+  "sandbox": "allow-scripts",
+  "opaqueSandbox": true,
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "hostContract": "simulated",
+  "referenceBytes": 131097,
+  "sourceAndSavedSha256": "e845dd4ce78f3e4c1c0062c93653af0a5490984dbcd7eb0f644f1b8f18753a92",
+  "verifiedSavedRecipients": 3,
+  "crossInvitationReplyRejected": true,
+  "wrongDiskFileRejected": true,
+  "cutoffOnLastReceipt": true,
+  "batchExportBeforeAndAfterClosure": true,
+  "receiptBatchSha256": "dbf874b122dbeba24fdd711c7aaca336ab9be5652282a0c17b34c231dcc3a108",
+  "offerCharacters": [
+    869,
+    864,
+    870
+  ],
+  "replyCharacters": [
+    798,
+    790,
+    793
+  ]
+}

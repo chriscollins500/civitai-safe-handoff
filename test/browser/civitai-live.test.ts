@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, open, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { crc32 } from 'node:zlib';
+import { crc32, gunzipSync, gzipSync } from 'node:zlib';
 import { build } from 'esbuild';
 import { unzipSync } from 'fflate';
 import { test } from 'node:test';
@@ -31,7 +31,17 @@ const pairing = configuredBrowser === configuredGuest ? configuredBrowser : conf
 const boundary = process.env.SAFE_CIVITAI_LIVE_BOUNDARY;
 const retryBoundarySave = process.env.SAFE_CIVITAI_VERIFY_SAVE_RETRY === '1';
 const captureScreenshots = process.env.SAFE_CIVITAI_CAPTURE_SCREENSHOTS === '1';
+const captureCandidate = process.env.SAFE_CIVITAI_CAPTURE_V040 === '1';
 const narrowViewport = process.env.SAFE_CIVITAI_NARROW === '1' ? { width: 390, height: 844 } : undefined;
+const resumeAtFullLimit = process.env.SAFE_CIVITAI_RESUME_BOUNDARY === '1';
+
+async function optionalArtifact(path: string) {
+  try { return await readFile(path); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw error;
+  }
+}
 
 async function launch(kind = configuredBrowser) {
   if (kind === 'firefox') return firefox.launch();
@@ -103,8 +113,55 @@ interface Mounted {
   site: string;
 }
 
-async function mount(browser: Browser, site: string, block: string, script: string, path = '/', clock = false): Promise<Mounted> {
+interface TransferTrace {
+  received: number;
+  interrupted: boolean;
+  outgoing: { offset: number; bytes: number }[];
+}
+
+async function mount(browser: Browser, site: string, block: string, script: string, path = '/', clock = false,
+  probe?: { interruptAfterBytes?: number }): Promise<Mounted> {
   const profile = await browser.newContext({ acceptDownloads: true, ...(narrowViewport ? { viewport: narrowViewport } : {}) });
+  if (probe) {
+    await profile.addInitScript(({ interruptAfterBytes }) => {
+      const trace: TransferTrace = { received: 0, interrupted: false, outgoing: [] };
+      Object.defineProperty(window, 'transferTrace', { value: trace });
+      const Peer = window.RTCPeerConnection;
+      if (typeof Peer !== 'function') return;
+      window.RTCPeerConnection = class extends Peer {
+        constructor(options?: RTCConfiguration) {
+          super(options);
+          this.addEventListener('datachannel', ({ channel }) => {
+            channel.addEventListener('message', ({ data }) => {
+              if (!(data instanceof ArrayBuffer)) return;
+              trace.received += data.byteLength;
+              if (!trace.interrupted && interruptAfterBytes && trace.received >= interruptAfterBytes) {
+                trace.interrupted = true;
+                channel.close();
+              }
+            });
+          });
+        }
+        override createDataChannel(label: string, options?: RTCDataChannelInit) {
+          const channel = super.createDataChannel(label, options);
+          const originalSend = channel.send.bind(channel);
+          const attempt = { offset: 0, bytes: 0 };
+          trace.outgoing.push(attempt);
+          channel.send = ((data: string | ArrayBuffer) => {
+            if (typeof data === 'string') {
+              const packet = JSON.parse(data);
+              if (packet.type === 'file') attempt.offset = packet.offset ?? 0;
+              originalSend(data);
+            } else {
+              originalSend(data);
+              attempt.bytes += data.byteLength;
+            }
+          }) as RTCDataChannel['send'];
+          return channel;
+        }
+      };
+    }, probe);
+  }
   const html = `<!doctype html><iframe title="${label}" sandbox="allow-scripts" src="${blockOrigin}" width="100%" height="2000"></iframe><script>${script}</script>`;
   await profile.route('**/*', (route) => {
     if ([site + '/', site + runPath].includes(route.request().url())) return route.fulfill({ contentType: 'text/html', body: html });
@@ -116,11 +173,16 @@ async function mount(browser: Browser, site: string, block: string, script: stri
   if (clock) await page.clock.install();
   await page.goto(site + path);
   const frame = page.frame({ url: blockOrigin })!;
-  await frame.getByRole('button', { name: 'Prepare handoff' }).waitFor();
+  const prepareButton = frame.getByRole('button', { name: /Prepare (handoff|drop-off)/ });
+  await prepareButton.waitFor();
   await frame.waitForFunction(() => !document.querySelector<HTMLButtonElement>('#live-start')?.disabled ||
     Boolean(document.querySelector('#live-sender-status')?.classList.contains('error')));
-  assert.ok(await frame.getByRole('button', { name: 'Prepare handoff' }).isEnabled(), await frame.locator('#live-sender-status').textContent() ?? '');
+  assert.ok(await prepareButton.isEnabled(), await frame.locator('#live-sender-status').textContent() ?? '');
   return { page, frame, site };
+}
+
+async function transferTrace(app: Mounted) {
+  return app.frame.evaluate(() => (window as unknown as { transferTrace: TransferTrace }).transferTrace);
 }
 
 async function prepare(sender: Mounted, recipients: string) {
@@ -202,6 +264,24 @@ async function verifyGuest(guest: Mounted, wrongFile = false, screenshot = false
   return bytes.length;
 }
 
+async function verifyReceiptBatch(sender: Mounted, labels: string[]) {
+  const download = sender.page.waitForEvent('download');
+  await sender.frame.getByRole('button', { name: 'Save all receipts' }).press('Enter');
+  const saved = await download;
+  assert.equal(saved.suggestedFilename(), 'civitai-safe-pickup-receipts.json');
+  const bytes = await readFile(await saved.path());
+  const { recipients, ...receipt } = JSON.parse(bytes.toString('utf8'));
+  assert.deepEqual(receipt, {
+    type: 'civitai-safe.pickup-receipts', version: 1, verification: 'saved-file-sha256',
+    file: { name, size: reference.byteLength, sha256: expected },
+  });
+  assert.deepEqual(recipients.map((item: { recipientLabel: string; verifiedAt: string }) => {
+    assert.equal(item.verifiedAt, new Date(item.verifiedAt).toISOString());
+    return item.recipientLabel;
+  }), labels);
+  return digest(bytes);
+}
+
 test('the Civitai-only app sends one file to three profiles and closes on the last verified save', { timeout: 60000 }, async (ctx) => {
   const block = await readFile('dist/civitai-app/index.html', 'utf8');
   const script = await hostScript();
@@ -217,6 +297,7 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
   assert.ok(opaqueSandbox);
   if (narrowViewport) await Promise.all([sender, a, b, c].map(assertContentFits));
   await prepare(sender, 'Guest A\nGuest B\nGuest C');
+  assert.equal(await sender.frame.getByRole('button', { name: 'Save all receipts' }).count(), 0);
   if (captureScreenshots) {
     await mkdir('site/assets', { recursive: true });
     await sender.page.setViewportSize({ width: 1280, height: 1160 });
@@ -236,13 +317,19 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
     assert.equal(await recipientRow(sender, name).getByText(/^Verified save ·/).count(), 0);
     await verifyGuest(guest, index === 0, captureScreenshots && index === 0);
     await recipientRow(sender, name).getByText('Verified save ·').waitFor();
+    if (index === 0) await verifyReceiptBatch(sender, ['Guest A']);
     if (index < 2) assert.ok(await sender.frame.getByRole('button', { name: 'Close handoff' }).isEnabled());
   }
   await sender.frame.getByText('All recipients verified their saves. This handoff is closed.').waitFor();
+  const receiptBatchSha256 = await verifyReceiptBatch(sender, ['Guest A', 'Guest B', 'Guest C']);
   if (captureScreenshots) await sender.frame.locator('#send').screenshot({ path: 'site/assets/receipts.png', animations: 'disabled' });
+  if (captureCandidate) await sender.frame.locator('#live-sender-summary').screenshot({
+    path: 'docs/evidence/civitai-only/v0.4.0-batch-receipts.png', animations: 'disabled',
+  });
   for (const name of ['Guest A', 'Guest B', 'Guest C']) {
-    assert.equal(await recipientRow(sender, name).getByRole('button').count(), 0);
-    assert.equal(await recipientRow(sender, name).getByLabel('Pickup offer for ' + name).inputValue(), '');
+    const row = recipientRow(sender, name);
+    assert.deepEqual(await row.getByRole('button').allTextContents(), ['Save receipt']);
+    assert.equal(await row.getByLabel('Pickup offer for ' + name).inputValue(), '');
   }
   const evidence = {
     browser: configuredBrowser, browserVersion: browser.version(), guestBrowser: configuredGuest, guestVersion: guestBrowser.version(),
@@ -251,6 +338,7 @@ test('the Civitai-only app sends one file to three profiles and closes on the la
     ...(narrowViewport ? { viewport: narrowViewport, noHorizontalOverflow: true, keyboardPreparationAndSave: true } : {}),
     referenceBytes: reference.length, sourceAndSavedSha256: expected, verifiedSavedRecipients: 3,
     crossInvitationReplyRejected: true, wrongDiskFileRejected: true, cutoffOnLastReceipt: true,
+    batchExportBeforeAndAfterClosure: true, receiptBatchSha256,
     offerCharacters: offers.map((item) => item.offer.length), replyCharacters: offers.map((item) => item.reply.length),
   };
   await mkdir('.validation', { recursive: true });
@@ -298,6 +386,72 @@ test('the Civitai-only app completes all twenty recipient slots and refuses a tw
     cutoffOnLastReceipt: true, referenceBytes: reference.length, sourceAndSavedSha256: expected };
   await writeFile('.validation/civitai-live-capacity-' + configuredBrowser + '.json', JSON.stringify(evidence, null, 2) + '\n');
   console.log(JSON.stringify(evidence));
+});
+
+test('revoking one pickup closes only its grant and the sender can download a verified receipt', { timeout: 45000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const script = await hostScript();
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const [sender, revoked, recipient] = await Promise.all([
+    mount(browser, siteCom, block, script), mount(browser, siteRed, block, script), mount(browser, siteCom, block, script),
+  ]);
+  await prepare(sender, 'Guest A\nGuest B\nGuest C');
+  const a = recipientRow(sender, 'Guest A');
+  const b = recipientRow(sender, 'Guest B');
+  const c = recipientRow(sender, 'Guest C');
+  const active = await prepareReply(sender, revoked, 'Guest A');
+  const sibling = await prepareReply(sender, recipient, 'Guest C');
+  await connect(sender, 'Guest A', active.reply);
+  await revoked.frame.getByRole('button', { name: 'Save file', exact: true }).waitFor();
+
+  await a.getByRole('button', { name: 'Revoke pickup for Guest A' }).press('Enter');
+  await revoked.frame.getByText('The sender revoked this pickup.').waitFor();
+  assert.equal(await revoked.frame.getByRole('button', { name: 'Save file', exact: true }).count(), 0);
+  assert.equal(await revoked.page.evaluate(() => (window as Window & { saves?: unknown[] }).saves?.length), 0);
+  assert.equal(await a.getByLabel('Pickup offer for Guest A').inputValue(), '');
+  assert.equal(await a.getByRole('button').count(), 0);
+  assert.ok(await sender.frame.getByRole('button', { name: 'Close handoff' }).isEnabled());
+
+  await b.getByRole('button', { name: 'Create pickup offer' }).press('Enter');
+  await b.getByRole('button', { name: 'Revoke pickup for Guest B' }).press('Enter');
+  await b.getByText('Pickup revoked.').waitFor();
+  assert.equal(await c.getByRole('button', { name: 'Save receipt for Guest C' }).count(), 0);
+  await connect(sender, 'Guest C', sibling.reply);
+  await verifyGuest(recipient);
+  await sender.frame.getByText('All remaining recipients verified their saves. This handoff is closed.').waitFor();
+  assert.equal(await b.getByLabel('Pickup offer for Guest B').inputValue(), '');
+  assert.equal(await b.getByRole('button').count(), 0);
+  assert.equal(await sender.frame.getByRole('button', { name: 'Close handoff' }).count(), 0);
+  if (captureScreenshots) {
+    await sender.frame.locator('#send').screenshot({ path: 'docs/evidence/civitai-only/v0.3.0-review-receipts.png', animations: 'disabled' });
+  }
+
+  const download = sender.page.waitForEvent('download');
+  await c.getByRole('button', { name: 'Save receipt for Guest C' }).press('Enter');
+  const saved = await download;
+  assert.equal(saved.suggestedFilename(), 'civitai-safe-pickup-receipt-3.json');
+  const bytes = await readFile(await saved.path());
+  const { verifiedAt, ...payload } = JSON.parse(bytes.toString('utf8'));
+  assert.equal(verifiedAt, new Date(verifiedAt).toISOString());
+  assert.deepEqual(payload, {
+    type: 'civitai-safe.pickup-receipt', version: 1, recipientLabel: 'Guest C', verification: 'saved-file-sha256',
+    file: { name, size: reference.byteLength, sha256: expected },
+  });
+  await c.getByText('Receipt download started.').waitFor();
+  await verifyReceiptBatch(sender, ['Guest C']);
+
+  await prepare(sender, 'Last recipient');
+  await recipientRow(sender, 'Last recipient').getByRole('button', { name: 'Revoke pickup for Last recipient' }).press('Enter');
+  await sender.frame.getByText('Every pickup was revoked. This handoff is closed.').waitFor();
+  const proof = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
+    hostOrigins: [siteCom, siteRed], hostContract: 'simulated', revokedActivePickupBeforeSave: true,
+    revokedPickupOfferCleared: true, siblingOfferStillWorked: true, lastRequiredReceiptClosedHandoff: true,
+    revokedRecipientsHadNoReceipt: true, downloadedReceiptMatchesVerifiedFile: true, finalRevocationClosedHandoff: true,
+    batchExportExcludedRevokedRecipients: true,
+    verifiedFileSha256: expected, receiptJsonSha256: digest(bytes) };
+  await writeFile('.validation/civitai-revocation-receipts-' + configuredBrowser + '.json', JSON.stringify(proof, null, 2) + '\n');
+  console.log(JSON.stringify(proof));
 });
 
 test('the sender ends an active Civitai pickup at the 24-hour deadline', { timeout: 35000 }, async (ctx) => {
@@ -375,12 +529,21 @@ test('the sender bundles selected files in the app and the recipient verifies th
   ];
   await sender.frame.getByLabel('Files or ZIP').setInputFiles(files);
   await sender.frame.getByLabel('Recipients', { exact: true }).fill('Archive guest');
-  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).click();
+  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).press('Enter');
   await sender.frame.getByText(/Ready to share until .*\.zip/).waitFor();
+  const preview = sender.frame.locator('#live-sender-preview');
+  await preview.getByText('3 archive entries').click();
+  for (const { name } of files) await preview.getByText(name, { exact: false }).waitFor();
   const invite = await prepareReply(sender, guest, 'Archive guest');
   await connect(sender, 'Archive guest', invite.reply);
+  const receivedPackage = guest.frame.locator('#live-receiver-area .live-package');
+  await receivedPackage.getByText('3 archive entries').click();
+  for (const { name } of files) await receivedPackage.getByText(name, { exact: false }).waitFor();
+  if (captureCandidate) await receivedPackage.screenshot({
+    path: 'docs/evidence/civitai-only/v0.4.0-archive-preview.png', animations: 'disabled',
+  });
   const downloading = guest.page.waitForEvent('download');
-  await guest.frame.getByRole('button', { name: 'Save file', exact: true }).click();
+  await guest.frame.getByRole('button', { name: 'Save file', exact: true }).press('Enter');
   const archive = await downloading;
   assert.equal(archive.suggestedFilename(), 'civitai-safe-handoff.zip');
   const diskPath = await archive.path();
@@ -395,7 +558,7 @@ test('the sender bundles selected files in the app and the recipient verifies th
   const result = {
     browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
     size: bytes.length, sha256: digest(bytes), files: files.map(({ name, buffer }) => ({ name, size: buffer.length, sha256: digest(buffer) })),
-    authorBundledInBrowser: true, allOriginalBytesVerifiedOnDisk: true, archiveReceipt: true,
+    authorBundledInBrowser: true, allOriginalBytesVerifiedOnDisk: true, archiveReceipt: true, bothPackagePreviews: true,
     hostOrigins: [siteCom, siteRed], hostContract: 'simulated',
   };
   await writeFile('.validation/civitai-live-bundle-' + configuredBrowser + '.json', JSON.stringify(result, null, 2) + '\n');
@@ -431,6 +594,188 @@ test('an interrupted pickup can be replaced while the handoff remains active', {
   await guest.frame.getByRole('button', { name: 'Save file', exact: true }).waitFor();
   await verifyGuest(guest);
   await sender.frame.getByText('All recipients verified their saves. This handoff is closed.').waitFor();
+});
+
+test('a fresh offer resumes the same pickup from its retained byte offset', { timeout: 240000 }, async (ctx) => {
+  const root = await realpath(resolve('.validation'));
+  const directory = await mkdtemp(join(root, 'civitai-live-resume-'));
+  ctx.after(async () => {
+    assert.equal(dirname(await realpath(directory)), root);
+    await rm(directory, { recursive: true, force: true });
+  });
+  const size = (resumeAtFullLimit ? 256 : 8) * MIB;
+  const interruptAfterBytes = (resumeAtFullLimit ? 64 : 2) * MIB;
+  const path = join(directory, 'resume-fixture.zip');
+  await writeBoundaryFile(path, 'zip', size);
+  const referenceHash = await digestFile(path);
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const controlArtifact = resumeAtFullLimit ? undefined : await optionalArtifact('dist/civitai-safe-handoff-0.3.0-candidate.zip');
+  const control = controlArtifact && new TextDecoder().decode(unzipSync(controlArtifact)['index.html']);
+  if (control) assert.equal(digest(Buffer.from(control)), 'e8eb05b5ad159ce9dc4e083273d28e0ab01f35ff509dad09cbe18175b50e146b');
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const script = await hostScript({ refuseFirstSave: !resumeAtFullLimit });
+  const results = [];
+  for (const [html, canResume] of [[control, false], [block, true]] as const) {
+    if (!html) continue;
+    const [sender, guest] = await Promise.all([
+      mount(browser, siteCom, html, script, '/', false, {}),
+      mount(browser, siteRed, html, script, '/', false, { interruptAfterBytes }),
+    ]);
+    try {
+      sender.page.setDefaultTimeout(110000);
+      guest.page.setDefaultTimeout(110000);
+      await sender.frame.getByLabel('Files or ZIP').setInputFiles(path);
+      await sender.frame.getByLabel('Recipients', { exact: true }).fill('Resume guest');
+      await sender.frame.getByRole('button', { name: 'Prepare handoff' }).press('Enter');
+      await sender.frame.getByText('Ready to share until').waitFor();
+      const first = await prepareReply(sender, guest, 'Resume guest');
+      await connect(sender, 'Resume guest', first.reply);
+      if (canResume) await guest.frame.getByText(/bytes retained\. Open a fresh offer/).waitFor();
+      else await guest.frame.getByText('The sender closed the connection before verification.').waitFor();
+      await recipientRow(sender, 'Resume guest').getByRole('button', { name: 'Create fresh offer' }).waitFor();
+      const interrupted = await transferTrace(guest);
+      assert.ok(interrupted.interrupted && interrupted.received >= interruptAfterBytes && interrupted.received < size);
+      assert.equal(await guest.frame.getByRole('button', { name: 'Save file', exact: true }).count(), 0);
+      if (canResume) {
+        assert.ok(await guest.frame.getByRole('button', { name: 'Discard partial file' }).isVisible());
+        if (captureCandidate) await guest.frame.locator('#pickup').screenshot({
+          path: 'docs/evidence/civitai-only/v0.4.0-resume-prompt.png', animations: 'disabled',
+        });
+        await guest.frame.getByLabel('Pickup offer', { exact: true }).fill(first.offer);
+        await guest.frame.getByRole('button', { name: 'Create pickup reply' }).press('Enter');
+        await guest.frame.getByText('Get a fresh offer from the sender to resume this pickup.').waitFor();
+      }
+
+      const fresh = await prepareReply(sender, guest, 'Resume guest');
+      assert.notEqual(fresh.offer, first.offer);
+      if (canResume) {
+        const encoded = fresh.reply.replace(/\s/g, '').slice('SAFE1.'.length);
+        const message = JSON.parse(gunzipSync(Buffer.from(encoded, 'base64url')).toString('utf8'));
+        assert.equal(message.resume.offset, interrupted.received);
+        assert.equal(message.resume.sha256, referenceHash);
+        message.resume.offset += 16 * 1024;
+        const changedReply = 'SAFE1.' + gzipSync(JSON.stringify(message)).toString('base64url');
+        await connect(sender, 'Resume guest', changedReply);
+        await recipientRow(sender, 'Resume guest').getByText('This reply belongs to a different pickup offer.').waitFor();
+        assert.equal((await transferTrace(sender)).outgoing[1].bytes, 0);
+      }
+      const resumeStarted = performance.now();
+      await connect(sender, 'Resume guest', fresh.reply);
+      const save = guest.frame.getByRole('button', { name: 'Save file', exact: true });
+      await save.waitFor();
+      if (!resumeAtFullLimit) {
+        await save.press('Enter');
+        await guest.frame.getByText('Browser save was refused.').waitFor();
+      }
+      const downloading = guest.page.waitForEvent('download');
+      const saveAction = !resumeAtFullLimit && canResume ? guest.frame.getByRole('button', { name: 'Retry save' }) : save;
+      await saveAction.press('Enter');
+      const disk = await (await downloading).path();
+      assert.equal(await digestFile(disk), referenceHash);
+      await guest.frame.getByLabel('Verify saved file').setInputFiles(disk);
+      await guest.frame.getByText('Verified save confirmed by the sender.').waitFor();
+      await sender.frame.getByText('All recipients verified their saves. This handoff is closed.').waitFor();
+
+      const trace = await transferTrace(sender);
+      assert.equal(trace.outgoing.length, 2);
+      const second = trace.outgoing[1];
+      assert.equal(second.offset, canResume ? interrupted.received : 0);
+      assert.equal(second.bytes, size - second.offset);
+      assert.equal(await guest.frame.getByRole('button', { name: 'Discard partial file' }).count(), 0);
+      results.push({ buildSha256: digest(Buffer.from(html)), mode: canResume ? 'resume' : 'restart-control',
+        interruptionReceivedBytes: interrupted.received, firstAttemptSentBytes: trace.outgoing[0].bytes,
+        resumeOffsetBytes: second.offset, secondAttemptSentBytes: second.bytes,
+        verifiedResumeAndSaveMs: Math.round(performance.now() - resumeStarted), verifiedSave: true,
+        ...(canResume ? { changedResumeReplyRejectedBeforePayload: true } : {}) });
+    } finally {
+      await Promise.all([sender.page.context().close(), guest.page.context().close()]);
+    }
+  }
+  const proof = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
+    hostOrigins: [siteCom, siteRed], hostContract: 'simulated', bytes: size, interruptAfterBytes, sourceAndSavedSha256: referenceHash,
+    sameRecipientTab: true, senderStayedOnline: true, refusedSmallSaveRetried: !resumeAtFullLimit, results };
+  await writeFile('.validation/civitai-live-resume-' + configuredBrowser + '-' + (size / MIB) + 'mib.json', JSON.stringify(proof, null, 2) + '\n');
+  console.log(JSON.stringify(proof));
+});
+
+test('a partial pickup loses its resume point at the original deadline', { timeout: 40000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const script = await hostScript();
+  const [sender, guest] = await Promise.all([
+    mount(browser, siteCom, block, script, '/', true),
+    mount(browser, siteRed, block, script, '/', true, { interruptAfterBytes: 32 * 1024 }),
+  ]);
+  await prepare(sender, 'Expire guest');
+  const first = await prepareReply(sender, guest, 'Expire guest');
+  await connect(sender, 'Expire guest', first.reply);
+  await guest.frame.getByText(/bytes retained/).waitFor();
+  const replacement = await prepareReply(sender, guest, 'Expire guest');
+  assert.notEqual(replacement.offer, first.offer);
+  await Promise.all([sender, guest].map(({ page }) => page.clock.fastForward(pickupWindowMs + 1000)));
+  await sender.frame.getByText('This handoff expired after 24 hours.').waitFor();
+  await guest.frame.getByText('This pickup offer expired.').waitFor();
+  assert.equal(await guest.frame.getByRole('button', { name: 'Discard partial file' }).count(), 0);
+  assert.equal(await recipientRow(sender, 'Expire guest').getByRole('button').count(), 0);
+  await guest.frame.getByLabel('Pickup offer', { exact: true }).fill(first.offer);
+  await guest.frame.getByRole('button', { name: 'Create pickup reply' }).press('Enter');
+  await guest.frame.waitForFunction(() => !document.querySelector<HTMLTextAreaElement>('#live-offer')?.value);
+  assert.equal(await guest.frame.getByLabel('Your pickup reply').count(), 0);
+});
+
+test('discarding a partial pickup or using a sibling offer starts a new copy', { timeout: 45000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const script = await hostScript();
+  for (const mode of ['discard', 'sibling'] as const) {
+    const [sender, guest] = await Promise.all([
+      mount(browser, siteCom, block, script, '/', false, {}),
+      mount(browser, siteRed, block, script, '/', false, { interruptAfterBytes: 32 * 1024 }),
+    ]);
+    try {
+      await prepare(sender, mode === 'discard' ? 'Guest A' : 'Guest A\nGuest B');
+      const first = await prepareReply(sender, guest, 'Guest A');
+      await connect(sender, 'Guest A', first.reply);
+      await guest.frame.getByText(/bytes retained/).waitFor();
+      if (mode === 'discard') {
+        await guest.frame.getByRole('button', { name: 'Discard partial file' }).press('Enter');
+        await guest.frame.getByText('Partial file discarded.').waitFor();
+      }
+      const next = mode === 'discard' ? 'Guest A' : 'Guest B';
+      const fresh = await prepareReply(sender, guest, next);
+      await connect(sender, next, fresh.reply);
+      await verifyGuest(guest);
+      assert.deepEqual((await transferTrace(sender)).outgoing[1], { offset: 0, bytes: reference.length });
+      if (mode === 'sibling') await recipientRow(sender, 'Guest A').getByRole('button', { name: 'Revoke pickup for Guest A' }).press('Enter');
+      assert.equal(await guest.frame.getByRole('button', { name: 'Discard partial file' }).count(), 0);
+    } finally {
+      await Promise.all([sender.page.context().close(), guest.page.context().close()]);
+    }
+  }
+});
+
+test('the packaged live release interoperates with the new direct pickup protocol in both directions', { timeout: 45000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const archive = await optionalArtifact('dist/civitai-safe-handoff-0.2.0-submission.zip');
+  const live = archive ? new TextDecoder().decode(unzipSync(archive)['index.html']) : await readFile('submission/index.html', 'utf8');
+  assert.equal(digest(Buffer.from(live)), '6be131c4375476476a7a99273836996ae20fe417be440e5ae36c74e043a7550a');
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const script = await hostScript();
+  for (const [source, destination] of [[live, block], [block, live]]) {
+    const [sender, guest] = await Promise.all([mount(browser, siteCom, source, script), mount(browser, siteRed, destination, script)]);
+    try {
+      await prepare(sender, 'Legacy guest');
+      const invite = await prepareReply(sender, guest, 'Legacy guest');
+      await connect(sender, 'Legacy guest', invite.reply);
+      await verifyGuest(guest);
+    } finally {
+      await Promise.all([sender.page.context().close(), guest.page.context().close()]);
+    }
+  }
 });
 
 test('Civitai pickup links preload one offer on both domains without opening a transfer', { timeout: 40000 }, async (ctx) => {
@@ -472,6 +817,121 @@ test('Civitai pickup links preload one offer on both domains without opening a t
   const result = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)), evidence };
   await writeFile('.validation/civitai-live-share-links-' + configuredBrowser + '.json', JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));
+});
+
+test('a drop-off request opens after the requester closes and prepares a verified return handoff', { timeout: 45000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const script = await hostScript();
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const requester = await mount(browser, siteCom, block, script);
+  await requester.frame.getByRole('link', { name: 'Request a drop-off' }).click();
+  const requested = ['ComfyUI workflow.json', 'Version note – 注記', 'Reference named <thumbnail>'];
+  await requester.frame.getByText('Add a file checklist').click();
+  await requester.frame.getByRole('textbox', { name: 'Requested files' }).fill(requested.join('\n'));
+  await requester.frame.getByRole('button', { name: 'Create request link' }).click();
+  const requestField = requester.frame.getByLabel('Drop-off request link');
+  await requestField.waitFor();
+  const request = new URL(await requestField.inputValue());
+  assert.equal(request.origin, siteCom);
+  assert.equal(request.pathname, runPath);
+  assert.match(request.hash, /^#dropoff=/);
+  assert.equal(request.search, '');
+  await requester.page.context().close();
+  assert.ok(requester.page.isClosed());
+
+  const responder = await mount(browser, siteCom, block, script, runPath + request.hash);
+  await responder.frame.getByRole('heading', { name: 'Drop off a file' }).waitFor();
+  assert.deepEqual(await responder.frame.locator('#requested-file-list li').allTextContents(), requested);
+  assert.equal(await responder.frame.locator('#requested-file-list li *').count(), 0);
+  if (narrowViewport) await assertContentFits(responder);
+  if (captureScreenshots) {
+    await responder.frame.locator('#send').screenshot({ path: 'docs/evidence/civitai-only/v0.3.0-dropoff-checklist.png', animations: 'disabled' });
+  }
+  assert.equal(await responder.frame.getByLabel('Recipients', { exact: true }).isVisible(), false);
+  assert.equal(await responder.frame.getByRole('article').count(), 0);
+  assert.equal(await responder.frame.getByLabel('Files or ZIP').inputValue(), '');
+  await responder.frame.getByLabel('Files or ZIP').setInputFiles({ name, mimeType: 'application/json', buffer: reference });
+  await responder.frame.getByRole('button', { name: 'Prepare drop-off' }).press('Enter');
+  const row = recipientRow(responder, 'Requester');
+  const offerField = row.getByLabel('Pickup offer for Requester');
+  await offerField.waitFor();
+  const offer = await offerField.inputValue();
+  assert.ok(offer.startsWith('SAFE1.'));
+  const returnField = row.getByLabel('Pickup link for Requester');
+  await returnField.waitFor();
+  const returnLink = new URL(await returnField.inputValue());
+  assert.equal(returnLink.origin, siteCom);
+  assert.equal(returnLink.pathname, runPath);
+  assert.equal(returnLink.hash, '#pickup=' + offer);
+  assert.equal(new URL(responder.page.url()).hash, '');
+  if (narrowViewport) await assertContentFits(responder);
+
+  const returning = await mount(browser, siteRed, block, script, returnLink.pathname + returnLink.hash);
+  await returning.frame.getByText('Pickup offer loaded. Create your reply to continue.').waitFor();
+  assert.equal(await returning.frame.getByLabel('Pickup offer', { exact: true }).inputValue(), offer);
+  await returning.frame.getByRole('button', { name: 'Create pickup reply' }).click();
+  await returning.frame.getByText('Send this reply to the sender').waitFor();
+  await connect(responder, 'Requester', await returning.frame.getByLabel('Your pickup reply').inputValue());
+  await verifyGuest(returning);
+  await responder.frame.getByText('All recipients verified their saves. This handoff is closed.').waitFor();
+  assert.equal(await returnField.inputValue(), '');
+  const proof = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
+    requestOrigin: siteCom, pickupOrigin: siteRed, requesterClosedBeforeLinkOpened: true, requestLinkCharacters: request.href.length,
+    checklistItems: requested.length, renderedChecklistAsText: true,
+    requiredExplicitFileSelection: true, automaticallyPreparedReturnLink: true, returnLinkCharacters: returnLink.href.length,
+    keyboardPrepared: true, viewport: narrowViewport ?? 'desktop', returnedOnLivePeer: true,
+    sourceAndSavedSha256: expected, verifiedSave: true, closedAfterReceipt: true, hostContract: 'simulated' };
+  await writeFile('.validation/civitai-dropoff-' + configuredBrowser + '.json', JSON.stringify(proof, null, 2) + '\n');
+  console.log(JSON.stringify(proof));
+});
+
+test('a drop-off request expires without enabling an upload, including when link sharing is refused', { timeout: 35000 }, async (ctx) => {
+  const block = await readFile('dist/civitai-app/index.html', 'utf8');
+  const script = await hostScript({ refuseShare: true });
+  const browser = await launch();
+  ctx.after(() => browser.close());
+  const requester = await mount(browser, siteRed, block, script, runPath, true);
+  await requester.frame.getByRole('button', { name: 'Create request link' }).click();
+  const field = requester.frame.getByLabel('Drop-off request link');
+  await field.waitFor();
+  const url = new URL(await field.inputValue());
+  assert.equal(url.origin, siteRed);
+  const guest = await mount(browser, siteRed, block, script, runPath + url.hash, true);
+  const preparing = await mount(browser, siteRed, block, script, runPath + url.hash, true);
+  const hour = 3_600_000;
+  await preparing.page.clock.fastForward(pickupWindowMs - hour);
+  await preparing.frame.getByLabel('Files or ZIP').setInputFiles({ name, mimeType: 'application/json', buffer: reference });
+  await preparing.frame.getByRole('button', { name: 'Prepare drop-off' }).click();
+  const row = recipientRow(preparing, 'Requester');
+  const lateLink = row.getByLabel('Pickup link for Requester');
+  await lateLink.waitFor();
+  const returnUrl = new URL(await lateLink.inputValue());
+  assert.equal(returnUrl.origin, siteRed);
+  await preparing.page.clock.fastForward(hour + 2000);
+  await preparing.frame.getByText('This drop-off request expired.').waitFor();
+  assert.equal(await lateLink.inputValue(), '');
+  assert.equal(await row.getByRole('button', { name: 'Connect recipient' }).isVisible(), false);
+  await guest.frame.getByRole('heading', { name: 'Drop off a file' }).waitFor();
+  await guest.frame.getByLabel('Files or ZIP').setInputFiles({ name, mimeType: 'application/json', buffer: reference });
+  await Promise.all([requester, guest].map((tab) => tab.page.clock.fastForward(pickupWindowMs + 2000)));
+  for (const tab of [requester, guest]) await tab.frame.getByText('This drop-off request expired.').waitFor();
+  assert.equal(await field.inputValue(), '');
+  assert.equal(await guest.frame.getByRole('button', { name: 'Prepare drop-off' }).count(), 0);
+  assert.equal(await guest.frame.getByRole('article').count(), 0);
+  assert.equal(await guest.frame.getByLabel('Files or ZIP').inputValue(), '');
+  assert.equal(new URL(guest.page.url()).hash, '');
+  await guest.page.goto(url.href);
+  await guest.frame.getByText('This drop-off request expired.').waitFor();
+  assert.equal(await guest.frame.getByRole('button', { name: 'Prepare drop-off' }).count(), 0);
+  await guest.page.goto(returnUrl.href);
+  await guest.frame.getByText('This pickup offer expired.').waitFor();
+  const proof = { browser: configuredBrowser, browserVersion: browser.version(), buildSha256: digest(Buffer.from(block)),
+    requestOrigin: siteRed, hostShareRefused: true, canonicalRequestLinkWorked: true, originalDeadlineMs: pickupWindowMs,
+    preparedOneHourBeforeOriginalDeadline: true, preparedReturnGrantCleared: true, expiredFileSelectionCleared: true,
+    expiredRequestAndOfferReplayRefused: true,
+    hostContract: 'simulated' };
+  await writeFile('.validation/civitai-dropoff-expiry-' + configuredBrowser + '.json', JSON.stringify(proof, null, 2) + '\n');
 });
 
 test('a Civitai host that refuses sharing leaves the private pickup code usable', { timeout: 25000 }, async (ctx) => {
@@ -650,7 +1110,7 @@ test('a valid file at the app save size boundary survives a real direct pickup',
   await sample('before-selecting-file');
   await sender.frame.getByLabel('Files or ZIP').setInputFiles(path);
   await sender.frame.getByLabel('Recipients', { exact: true }).fill('Boundary recipient');
-  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).click();
+  await sender.frame.getByRole('button', { name: 'Prepare handoff' }).press('Enter');
   await sender.frame.getByText('Ready to share until').waitFor();
   const negotiation = await prepareReply(sender, guest, 'Boundary recipient');
   const started = performance.now();

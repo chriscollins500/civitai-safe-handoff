@@ -15,3 +15,13 @@ Version 0.2.0 is approved and live. Its hosted HTML matches the submitted ZIP by
 The gallery uses synthetic recipients and a synthetic workflow. It captures the actual bundled page under a fixture for the Civitai host.
 
 [App-box evidence and repeatable commands](https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/CIVITAI_APP_BOX.md)
+
+## v0.4.0 candidate
+
+Use the authorized review build for these additional checks.
+
+1. Open a drop-off request and verify its optional checklist. Prepare a synthetic ZIP and check that the recipient sees the intended entry names and sizes.
+2. Interrupt an active transfer. Keep the recipient tab open and issue a fresh offer for that recipient. Compare the resumed ZIP and the original with SHA-256.
+3. Export verified receipts after the first save and again after closure. Compare the records against the actual recipients who verified their files.
+
+The candidate tests used local Civitai host fixtures in Edge and Firefox. The signed-in, separate-device Civitai checks and the offline pickup gate still require live verification.

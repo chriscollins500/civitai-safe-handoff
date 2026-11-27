@@ -60,6 +60,15 @@ test('SAFE Handoff documentation works from the GitHub Pages project path', { ti
   assert.deepEqual(errors, []);
   assert.deepEqual(requestedOutsideSite, []);
 
+  await page.goto(origin + prefix + 'review/');
+  assert.ok(await page.getByRole('heading', { name: 'v0.4.0 candidate screenshots' }).isVisible());
+  const candidateImages = await page.locator('#v040 img').evaluateAll((images) => images.map((image) => image.getAttribute('src')));
+  assert.deepEqual(candidateImages, [
+    '../assets/v0.4.0/v0.4.0-archive-preview.png',
+    '../assets/v0.4.0/v0.4.0-resume-prompt.png',
+    '../assets/v0.4.0/v0.4.0-batch-receipts.png',
+  ]);
+
   await page.goto(origin + prefix);
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'Skip to content');

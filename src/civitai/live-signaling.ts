@@ -8,6 +8,7 @@ const maximumSdp = 16 * 1024;
 const maximumExpandedCode = 32 * 1024;
 const maximumCode = 16 * 1024;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const sha256 = /^[0-9a-f]{64}$/;
 
 export const pickupWindowMs = 24 * 60 * 60 * 1000;
 export const chatCodeLine = 1800;
@@ -20,6 +21,12 @@ interface Offer {
   expiresAt: number;
   secret: string;
   sdp: string;
+  transferId?: string;
+}
+
+export interface LiveResumeRequest {
+  offset: number;
+  sha256: string;
 }
 
 interface Answer {
@@ -27,6 +34,14 @@ interface Answer {
   id: string;
   proof: string;
   sdp: string;
+  resume?: LiveResumeRequest;
+}
+
+function validResume(value: unknown): value is LiveResumeRequest {
+  if (!value || typeof value !== 'object') return false;
+  const { offset, sha256: digest } = value as Partial<LiveResumeRequest>;
+  return typeof offset === 'number' && Number.isSafeInteger(offset) && offset > 0 &&
+    typeof digest === 'string' && sha256.test(digest);
 }
 
 export function createLivePeer() {
@@ -75,11 +90,13 @@ async function decode(code: string): Promise<Offer | Answer> {
     throw new Error('The pickup code has no supported direct data connection.');
   }
   if (packet.type === 'offer' && typeof packet.secret === 'string' && packet.secret.length === 43 &&
-    Number.isSafeInteger(packet.expiresAt) && packet.expiresAt > 0) {
+    Number.isSafeInteger(packet.expiresAt) && packet.expiresAt > 0 &&
+    (packet.transferId === undefined || (typeof packet.transferId === 'string' && uuid.test(packet.transferId)))) {
     decodeBytes(packet.secret, 32);
     return packet;
   }
-  if (packet.type === 'answer' && typeof packet.proof === 'string' && packet.proof.length === 43) {
+  if (packet.type === 'answer' && typeof packet.proof === 'string' && packet.proof.length === 43 &&
+    (packet.resume === undefined || validResume(packet.resume))) {
     decodeBytes(packet.proof, 32);
     return packet;
   }
@@ -105,13 +122,18 @@ async function answerKey(offer: Offer) {
   return crypto.subtle.importKey('raw', decodeBytes(offer.secret, 32), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 }
 
-function answerProofInput(offer: Offer, sdp: string) {
-  return encoder.encode(JSON.stringify(['civitai-safe:answer:1', offer.id, offer.expiresAt, offer.sdp, sdp]));
+function answerProofInput(offer: Offer, sdp: string, resume?: LiveResumeRequest) {
+  const common = [offer.id, offer.expiresAt, offer.sdp, sdp];
+  return encoder.encode(JSON.stringify(resume
+    ? ['civitai-safe:answer:2', ...common, offer.transferId, resume.offset, resume.sha256]
+    : ['civitai-safe:answer:1', ...common]));
 }
 
-export async function createLiveOffer(peer: RTCPeerConnection, expiresAt: number) {
+export async function createLiveOffer(peer: RTCPeerConnection, expiresAt: number, transferId: string) {
   await peer.setLocalDescription(await peer.createOffer());
-  const offer: Offer = { type: 'offer', id: crypto.randomUUID(), expiresAt, secret: encodeBytes(randomSecret()), sdp: await gatheredSdp(peer) };
+  const offer: Offer = {
+    type: 'offer', id: crypto.randomUUID(), expiresAt, secret: encodeBytes(randomSecret()), sdp: await gatheredSdp(peer), transferId,
+  };
   return { offer, code: await encode(offer) };
 }
 
@@ -121,20 +143,21 @@ export async function readLiveOffer(code: string) {
   return packet;
 }
 
-export async function createLiveAnswer(peer: RTCPeerConnection, offer: Offer) {
+export async function createLiveAnswer(peer: RTCPeerConnection, offer: Offer, resume?: LiveResumeRequest) {
+  if (resume && (!offer.transferId || !validResume(resume))) throw new Error('This pickup does not support that resume point.');
   await peer.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
   await peer.setLocalDescription(await peer.createAnswer());
   const sdp = await gatheredSdp(peer);
-  const mac = await crypto.subtle.sign('HMAC', await answerKey(offer), answerProofInput(offer, sdp));
-  return encode({ type: 'answer', id: offer.id, proof: encodeBytes(new Uint8Array(mac)), sdp });
+  const mac = await crypto.subtle.sign('HMAC', await answerKey(offer), answerProofInput(offer, sdp, resume));
+  return encode({ type: 'answer', id: offer.id, proof: encodeBytes(new Uint8Array(mac)), sdp, resume });
 }
 
-export async function applyLiveAnswer(peer: RTCPeerConnection, invite: Offer, code: string) {
+export async function readLiveAnswer(invite: Offer, code: string) {
   const answer = await decode(code);
-  if (answer.type !== 'answer' || answer.id !== invite.id || !await crypto.subtle.verify(
-    'HMAC', await answerKey(invite), decodeBytes(answer.proof, 32), answerProofInput(invite, answer.sdp),
+  if (answer.type !== 'answer' || answer.id !== invite.id || (answer.resume && !invite.transferId) || !await crypto.subtle.verify(
+    'HMAC', await answerKey(invite), decodeBytes(answer.proof, 32), answerProofInput(invite, answer.sdp, answer.resume),
   )) throw new Error('This reply belongs to a different pickup offer.');
-  await peer.setRemoteDescription({ type: 'answer', sdp: answer.sdp });
+  return answer;
 }
 
 export function chatCode(code: string) {

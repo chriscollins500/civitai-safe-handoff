@@ -6,6 +6,10 @@ Browser-only creator file sharing inside Civitai. Send a supported file to up to
 
 [Project website](https://chriscollins500.github.io/civitai-safe-handoff/) · [User guide](https://chriscollins500.github.io/civitai-safe-handoff/guide/) · [Wiki](https://github.com/chriscollins500/civitai-safe-handoff/wiki) · [App screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/#screenshots)
 
+## v0.4.0 review candidate
+
+This candidate adds a drop-off request flow, ZIP previews, individual revocation, combined verified receipts, and resume for interrupted live transfers. The [v0.4.0 review packet](submission/REVIEW-v0.4.0.md) matches the exact tested App Block and lists the remaining live checks.
+
 ## How it works
 
 1. Prepare one file or a ZIP. Enter one recipient label per line.
@@ -22,15 +26,16 @@ Developers use Node.js 26.13 or newer and Civitai CLI 0.1.150.
 ```sh
 npm ci
 npm run check
+npm test
 npm run build:civitai
 civitai app validate dist/civitai-app
 ```
 
-Compare the built index and manifest with [the review candidate](submission/). Run the browser tests with Chrome installed on the engineering host. Users need only their existing browser.
+Compare the built index and manifest with the [v0.4.0 review candidate](submission/v0.4.0/). Run the browser tests with Chrome installed on the engineering host. Users need only their existing browser.
 
 ```sh
 npm run test:browser
 npm run test:site
 ```
 
-[Browser and file-size evidence](validation/CIVITAI_APP_BOX.md) · [Review packet](submission/REVIEW.md) · [Report a security concern](SECURITY.md)
+[v0.4.0 candidate evidence](validation/v0.4.0.md) · [Live release evidence](validation/CIVITAI_APP_BOX.md) · [Report a security concern](SECURITY.md)

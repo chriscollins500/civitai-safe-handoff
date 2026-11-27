@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-27T01:56:33.4594495Z",
+  "version": "0.4.0",
+  "status": "local-candidate",
+  "civitaiCLI": "0.1.150",
+  "node": "v26.13.0",
+  "powerShell": "7.6.9",
+  "artifact": "civitai-safe-handoff-0.4.0-candidate.zip",
+  "sha256": "f3e50116612406efcb46ddaf05955c70e46b68613b6db34b10f9a4e4efbb1828",
+  "archiveBytes": 38371,
+  "rebuiltIdentically": true,
+  "independentlyInspectedWith": "System.IO.Compression.ZipFile and System.Security.Cryptography.SHA256",
+  "files": [
+    {
+      "path": "block.manifest.json",
+      "bytes": 994,
+      "sha256": "782bcb7a4cc68508c21becf48d4e2ee20b7637981c51f302a62d5c829d314fbe"
+    },
+    {
+      "path": "index.html",
+      "bytes": 143077,
+      "sha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b"
+    }
+  ]
+}

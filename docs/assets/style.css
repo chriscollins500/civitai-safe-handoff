@@ -93,6 +93,10 @@ h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: -.
 .readable { max-width: 48rem; }
 .gallery { display: grid; gap: 1.05rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.3rem; align-items: start; }
 .gallery-wide { grid-column: 1 / -1; }
+.candidate-gallery img { width: auto; max-width: 100%; margin-inline: auto; }
+@media (min-width: 1100px) {
+  .candidate-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .links { margin-top: .75rem; padding-inline-start: 1.15rem; }
 table { border-collapse: collapse; width: 100%; margin-top: 1.1rem; font-size: .92rem; }
 caption { text-align: left; color: var(--muted); margin-bottom: .42rem; }

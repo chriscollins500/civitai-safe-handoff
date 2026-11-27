@@ -1,0 +1,3566 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Civitai SAFE Handoff</title>
+    <style>
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #ecf0fb;
+  background: #11131a;
+  --muted: #a8afc5;
+  --panel: #1a1e29;
+  --field: #121621;
+  --line: #354055;
+  --accent: #a7b5ff;
+  --cyan: #a8edd9;
+  --danger: #ffb5b5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: var(--accent); text-underline-offset: .2em; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.site-header { min-height: 68px; display: flex; justify-content: space-between; align-items: center; padding: 12px clamp(16px, 5vw, 72px); border-bottom: 1px solid var(--line); }
+.brand, .account { display: inline-flex; gap: 12px; align-items: center; }
+.brand { color: inherit; text-decoration: none; font-weight: 700; white-space: nowrap; }
+.brand-mark { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 8px; background: var(--accent); color: #181b2f; }
+.account { color: var(--muted); font-size: .9rem; }
+.shell { width: min(1140px, calc(100% - 40px)); margin: 48px auto 88px; }
+.intro { margin-bottom: 32px; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: clamp(2rem, 4.5vw, 3.3rem); letter-spacing: -.06em; line-height: 1.12; }
+h2 { font-size: 1.17rem; letter-spacing: -.025em; }
+h3 { font-size: 1rem; }
+p, label, li { line-height: 1.55; }
+.intro p { margin-top: 10px; }
+.muted { color: var(--muted); }
+.grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: start; gap: 20px; }
+.stack, .panel, .field { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.stack { gap: 17px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: clamp(16px, 3vw, 25px); }
+.narrow { max-width: 560px; }
+.fields { display: grid; gap: 15px; }
+.field { gap: 6px; font-size: .95rem; }
+.field input:not([type='checkbox']), .field textarea, .field select, .link-field {
+  width: 100%; border: 1px solid #46516a; border-radius: 8px; background: var(--field); padding: 10px 12px;
+}
+input[type='file'] { padding: 8px; }
+input[type='file']::file-selector-button { border: 0; border-radius: 5px; margin-right: 10px; padding: 7px 10px; background: #353c59; color: #f0f3fe; cursor: pointer; }
+textarea { resize: vertical; min-height: 55px; }
+.actions, .between, .metadata { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.between { justify-content: space-between; }
+.metadata { column-gap: 16px; margin: 4px 0; font-size: .9rem; color: var(--muted); }
+.button { appearance: none; border: 1px solid #4b5873; border-radius: 8px; background: #262d40; color: #f1f4ff; cursor: pointer; min-height: 39px; padding: 8px 13px; font-size: .9rem; font-weight: 650; }
+.button:hover { background: #353e57; }
+.button.primary { background: var(--accent); border-color: var(--accent); color: #11172a; }
+.button.primary:hover { background: #c3ccff; }
+.button.danger { color: var(--danger); }
+.button:disabled { opacity: .55; cursor: default; }
+.status { min-height: 1.5em; color: var(--cyan); font-size: .9rem; overflow-wrap: anywhere; }
+.error { color: var(--danger); }
+.records { display: grid; gap: 9px; }
+.row { border: 1px solid var(--line); background: #161a25; padding: 12px 14px; border-radius: 10px; display: grid; gap: 9px; min-width: 0; overflow-wrap: anywhere; }
+.row-title { font-weight: 650; }
+.files { padding-left: 19px; margin: 0; color: var(--muted); }
+.files li { overflow-wrap: anywhere; }
+.badge { background: #28394c; color: #dbe7ef; border-radius: 12px; padding: 3px 9px; font-size: .76rem; white-space: nowrap; }
+.badge.success { background: #1c403a; color: #c4faea; }
+.section-space { margin-top: 20px; }
+.key-link { width: 100%; }
+.quiet { font-size: .85rem; }
+.note { white-space: pre-wrap; overflow-wrap: anywhere; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+details summary { cursor: pointer; color: var(--accent); }
+details .fields { margin-top: 12px; }
+progress { width: 100%; height: 12px; accent-color: var(--accent); }
+.hidden { display: none; }
+@media (max-width: 740px) {
+  .shell { width: calc(100% - 32px); margin-top: 32px; }
+  .grid { grid-template-columns: 1fr; }
+  .site-header { padding: 10px 16px; }
+}
+
+body {
+  background: radial-gradient(ellipse at 16% 0%, #1c3441 0%, #131d2b 33%, #11131a 72%);
+  min-height: 100vh;
+}
+[hidden] { display: none !important; }
+.shell { margin-top: clamp(24px, 6vw, 58px); }
+.intro { margin-bottom: 5px; }
+.app-shortcuts { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 17px; }
+.app-shortcuts a { color: var(--accent); font-size: .91rem; font-weight: 650; }
+.live-section { display: grid; gap: 14px; }
+.handoff-note {
+  color: var(--muted);
+  border-inline-start: 2px solid #77cdb5;
+  padding: 7px 12px;
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+.handoff-note strong { color: #ddf8ee; }
+.live-section .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.live-section .panel { scroll-margin: 18px; }
+.live-section .panel h2 { font-size: 1.22rem; }
+.field-hint { margin-top: -10px; }
+.records:empty, .status:empty, .stack:empty { display: none; }
+#live-sender-summary:not(:has(.status:not(:empty), .records:not(:empty))) { display: none; }
+.row .status { min-height: 0; }
+.row .button { justify-self: start; }
+.live-section .button { min-height: 44px; }
+.live-section .button.primary { background: #a8edd9; border-color: #a8edd9; color: #132322; }
+.live-section .button.primary:hover { background: #cbf8e9; }
+.live-section .field textarea[readonly], .live-section .field input[readonly] { font: .8rem ui-monospace, monospace; }
+.live-section summary { width: fit-content; cursor: pointer; }
+.live-section details[open] > summary { margin-bottom: 12px; }
+#requested-file-list { margin: 0; padding-inline-start: 1.35rem; overflow-wrap: anywhere; }
+.live-package { gap: 6px; overflow-wrap: anywhere; }
+.package-entries { margin: 8px 0 0; padding-inline-start: 1.35rem; }
+#live-sender-preview:empty { display: none; }
+#live-receiver-area h3 { overflow-wrap: anywhere; }
+@media (max-width: 680px) { .live-section .grid { grid-template-columns: minmax(0, 1fr); } }
+
+</style>
+  </head>
+  <body>
+    <main class="shell stack">
+      <div class="intro">
+        <h1>Civitai SAFE Handoff</h1>
+        <p class="muted">Send files directly to your collaborators. Check who saved their copy.</p>
+        <nav class="app-shortcuts" aria-label="Handoff shortcuts">
+          <a href="#send">Send files</a><a href="#dropoff">Request a drop-off</a><a href="#pickup">Pick up a file</a><a href="#dependencies">Pin models</a>
+        </nav>
+      </div>
+      <section class="live-section" id="live-pickup" aria-label="Live file handoff">
+        <p class="handoff-note">Keep both tabs open. Handoffs expire after <strong>24 hours</strong> or as soon as everyone verifies their save.</p>
+        <div class="grid">
+          <section class="panel" id="send" aria-labelledby="send-title">
+            <h2 id="send-title">Send files</h2>
+            <div class="stack" id="live-sender-summary">
+              <p class="status" role="status" id="live-sender-status"></p>
+              <div id="live-sender-preview"></div>
+              <div class="records" id="live-sender-rows"></div>
+            </div>
+            <div class="stack" id="live-sender-form">
+              <div class="stack" id="requested-files" hidden>
+                <h3>Requested files</h3>
+                <ul id="requested-file-list"></ul>
+              </div>
+              <label class="field">Files or ZIP <input type="file" id="live-source" multiple aria-describedby="file-hint"></label>
+              <p class="quiet muted field-hint" id="file-hint">Choose up to 25 files. ZIPs up to 256 MiB.</p>
+              <label class="field" id="recipient-field">Recipients <textarea id="live-recipients" rows="2" placeholder="One name per line" aria-describedby="recipients-hint"></textarea></label>
+              <p class="quiet muted field-hint" id="recipients-hint">Enter up to 20 names, one per line. These labels are for your receipts.</p>
+              <button type="button" class="button primary" id="live-start" disabled>Prepare handoff</button>
+              <button type="button" class="button" id="cancel-dropoff" hidden>Cancel drop-off</button>
+            </div>
+          </section>
+          <section class="panel" id="pickup" aria-labelledby="pickup-title">
+            <h2 id="pickup-title">Pick up a file</h2>
+            <div class="stack" id="live-receiver-form">
+              <p class="muted">Open the sender’s pickup link or paste their offer code from private Civitai chat.</p>
+              <label class="field">Pickup offer <textarea id="live-offer" rows="2"></textarea></label>
+              <button type="button" class="button primary" id="live-accept" disabled>Create pickup reply</button>
+              <button type="button" class="button" id="discard-partial" hidden>Discard partial file</button>
+            </div>
+            <p class="status" role="status" id="live-receiver-status"></p>
+            <div class="stack" id="live-receiver-area"></div>
+          </section>
+        </div>
+        <section class="panel" id="dropoff" aria-labelledby="dropoff-title">
+          <h2 id="dropoff-title">Request a drop-off</h2>
+          <p class="muted">Share a link in private Civitai chat to ask someone to send you a file.</p>
+          <details>
+            <summary>Add a file checklist</summary>
+            <label class="field">Requested files <textarea id="dropoff-checklist" rows="3" maxlength="800" autocomplete="off" aria-describedby="dropoff-checklist-hint"></textarea></label>
+            <p class="muted quiet" id="dropoff-checklist-hint">One item per line. Anyone with the link can read the list.</p>
+          </details>
+          <div class="actions"><button type="button" class="button primary" id="create-dropoff" disabled>Create request link</button></div>
+          <label class="field" id="dropoff-link-field" hidden>Drop-off request link <input type="url" id="dropoff-link" readonly></label>
+          <p class="status" id="dropoff-status" role="status"></p>
+        </section>
+      </section>
+      <section class="panel" id="dependencies">
+        <h2>Pin Civitai models</h2>
+        <div class="actions">
+          <button type="button" id="checkpoint" class="button primary" disabled>Choose checkpoint</button>
+          <button type="button" id="lora" class="button" disabled>Choose LoRAs</button>
+        </div>
+        <ul id="picks" class="files"></ul>
+        <label class="field">Dependency pins <textarea id="manifest" rows="7" readonly></textarea></label>
+        <div class="actions">
+          <button type="button" id="copy" class="button" disabled>Select pins to copy</button>
+          <button type="button" id="save-pins" class="button" disabled>Save dependency JSON</button>
+          <button type="button" id="clear" class="button" disabled>Clear selection</button>
+        </div>
+        <p id="status" class="status" role="status">Waiting for the Civitai host…</p>
+        <p class="muted quiet">Copy the pins into a handoff message or save them as a JSON file.</p>
+      </section>
+    </main>
+    <script>
+"use strict";
+(() => {
+  // node_modules/@noble/hashes/_u64.js
+  var fromNumH = (n) => n / 2 ** 32 | 0;
+  var fromNumL = (n) => n >>> 0;
+  function setU64FromNum(view, byteOffset, n, isLE) {
+    const h = fromNumH(n);
+    const l = fromNumL(n);
+    view.setUint32(byteOffset, isLE ? l : h, isLE);
+    view.setUint32(byteOffset + 4, isLE ? h : l, isLE);
+  }
+
+  // node_modules/@noble/hashes/utils.js
+  function isBytes(a) {
+    return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
+  }
+  var atitle = (title) => title ? `"${title}" ` : "";
+  function anumber(n, title = "") {
+    if (typeof n !== "number")
+      throw new TypeError(atitle(title) + "expected number, got " + typeof n);
+    if (!Number.isSafeInteger(n) || n < 0)
+      throw new RangeError(atitle(title) + "expected integer >= 0, got " + n);
+    return n;
+  }
+  function abytes(value, length, title = "") {
+    if (isBytes(value) && (length === void 0 || value.length === length))
+      return value;
+    if (length !== void 0)
+      anumber(length, "length");
+    const bytes = isBytes(value);
+    const ofLen = length !== void 0 ? ` of length ${length}` : "";
+    const got = bytes ? `length=${value.length}` : `type=${typeof value}`;
+    const message = atitle(title) + "expected Uint8Array" + ofLen + ", got " + got;
+    if (!bytes)
+      throw new TypeError(message);
+    throw new RangeError(message);
+  }
+  var aobject = (value, label) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value))
+      throw new TypeError((label === "object" ? "" : `"${label}" `) + "expected object, got type=" + typeof value);
+  };
+  var aopts = (value, label) => {
+    aobject(value, label);
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null)
+      throw new TypeError(`"${label}" expected plain object`);
+    if (Object.hasOwn(value, "__proto__"))
+      throw new TypeError(`"${label}.__proto__" is not allowed`);
+  };
+  function aexists(instance, checkFinished = true) {
+    if (instance.destroyed)
+      throw new Error("hash was destroyed");
+    if (checkFinished && instance.finished)
+      throw new Error("digest() was already called");
+  }
+  function aoutput(out, instance) {
+    abytes(out, void 0, "output");
+    const min = instance.outputLen;
+    if (!(out.length >= min)) {
+      throw new RangeError('"output" expected length >= ' + min);
+    }
+  }
+  function clean(...arrays) {
+    for (let i2 = 0; i2 < arrays.length; i2++) {
+      arrays[i2].fill(0);
+    }
+  }
+  function createView(arr) {
+    return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+  }
+  function rotr(word, shift) {
+    return word << 32 - shift | word >>> shift;
+  }
+  var hasHexBuiltin = /* @__PURE__ */ (() => (
+    // @ts-ignore
+    typeof Uint8Array.from([]).toHex === "function" && typeof Uint8Array.fromHex === "function"
+  ))();
+  var hexes = /* @__PURE__ */ Array.from({ length: 256 }, (_, i2) => i2.toString(16).padStart(2, "0"));
+  function bytesToHex(bytes) {
+    abytes(bytes);
+    if (hasHexBuiltin)
+      return bytes.toHex();
+    let hex = "";
+    for (let i2 = 0; i2 < bytes.length; i2++) {
+      hex += hexes[bytes[i2]];
+    }
+    return hex;
+  }
+  function checkOpts(defaults, opts, title = "opts") {
+    aopts(defaults, "defaults");
+    if (opts !== void 0)
+      aopts(opts, title);
+    const merged = Object.assign(/* @__PURE__ */ Object.create(null), defaults, opts);
+    return merged;
+  }
+  function createHasher(hashCons, info = {}) {
+    if (typeof hashCons !== "function")
+      throw new TypeError('"hashCons" expected function, got type=' + typeof hashCons);
+    info = checkOpts({}, info, "info");
+    const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
+    const tmp = hashCons(void 0);
+    hashC.outputLen = tmp.outputLen;
+    hashC.blockLen = tmp.blockLen;
+    hashC.canXOF = tmp.canXOF;
+    hashC.create = (opts) => hashCons(opts);
+    Object.assign(hashC, info);
+    return Object.freeze(hashC);
+  }
+  var oidNist = (suffix) => ({
+    // Current NIST hashAlgs suffixes used here fit in one DER subidentifier octet.
+    // Larger suffix values would need base-128 OID encoding and a different length byte.
+    oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
+  });
+
+  // node_modules/@noble/hashes/_md.js
+  function Chi(a, b, c) {
+    return a & b ^ ~a & c;
+  }
+  function Maj(a, b, c) {
+    return a & b ^ a & c ^ b & c;
+  }
+  var HashMD = class {
+    blockLen;
+    outputLen;
+    canXOF = false;
+    padOffset;
+    isLE;
+    // For partial updates less than block size
+    buffer;
+    view;
+    finished = false;
+    length = 0;
+    pos = 0;
+    destroyed = false;
+    constructor(blockLen, outputLen, padOffset, isLE) {
+      this.blockLen = blockLen;
+      this.outputLen = outputLen;
+      this.padOffset = padOffset;
+      this.isLE = isLE;
+      this.buffer = new Uint8Array(blockLen);
+      this.view = createView(this.buffer);
+    }
+    update(data) {
+      aexists(this);
+      abytes(data);
+      const { view, buffer, blockLen } = this;
+      const len = data.length;
+      let processed = false;
+      for (let pos = 0; pos < len; ) {
+        const take = Math.min(blockLen - this.pos, len - pos);
+        if (take === blockLen) {
+          const dataView = createView(data);
+          for (; blockLen <= len - pos; pos += blockLen)
+            this.process(dataView, pos);
+          processed = true;
+          continue;
+        }
+        buffer.set(pos === 0 && take === len ? data : data.subarray(pos, pos + take), this.pos);
+        this.pos += take;
+        pos += take;
+        if (this.pos === blockLen) {
+          this.process(view, 0);
+          this.pos = 0;
+          processed = true;
+        }
+      }
+      this.length += data.length;
+      if (processed)
+        this.roundClean();
+      return this;
+    }
+    digestInto(out) {
+      aexists(this);
+      aoutput(out, this);
+      this.finished = true;
+      const { buffer, view, blockLen, isLE } = this;
+      let { pos } = this;
+      buffer[pos++] = 128;
+      buffer.fill(0, pos);
+      if (this.padOffset > blockLen - pos) {
+        this.process(view, 0);
+        buffer.fill(0);
+      }
+      setU64FromNum(view, blockLen - 8, this.length * 8, isLE);
+      this.process(view, 0);
+      this.roundClean();
+      const oview = out === buffer ? view : createView(out);
+      const len = this.outputLen;
+      const outLen = len / 4;
+      const state = this.get();
+      if (len % 4 || outLen > state.length)
+        throw new Error("invalid outputLen");
+      for (let i2 = 0; i2 < outLen; i2++)
+        oview.setUint32(4 * i2, state[i2], isLE);
+    }
+    digest() {
+      const { buffer, outputLen } = this;
+      this.digestInto(buffer);
+      const res = buffer.slice(0, outputLen);
+      this.destroy();
+      return res;
+    }
+    _cloneIntoMeta(to) {
+      const { buffer, length, finished, destroyed, pos } = this;
+      to.destroyed = destroyed;
+      to.finished = finished;
+      to.length = length;
+      to.pos = pos;
+      if (pos)
+        to.buffer.set(buffer);
+      return to;
+    }
+    clone() {
+      return this._cloneInto();
+    }
+  };
+  var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
+    1779033703,
+    3144134277,
+    1013904242,
+    2773480762,
+    1359893119,
+    2600822924,
+    528734635,
+    1541459225
+  ]);
+
+  // node_modules/@noble/hashes/sha2.js
+  var SHA256_K = /* @__PURE__ */ Uint32Array.from([
+    1116352408,
+    1899447441,
+    3049323471,
+    3921009573,
+    961987163,
+    1508970993,
+    2453635748,
+    2870763221,
+    3624381080,
+    310598401,
+    607225278,
+    1426881987,
+    1925078388,
+    2162078206,
+    2614888103,
+    3248222580,
+    3835390401,
+    4022224774,
+    264347078,
+    604807628,
+    770255983,
+    1249150122,
+    1555081692,
+    1996064986,
+    2554220882,
+    2821834349,
+    2952996808,
+    3210313671,
+    3336571891,
+    3584528711,
+    113926993,
+    338241895,
+    666307205,
+    773529912,
+    1294757372,
+    1396182291,
+    1695183700,
+    1986661051,
+    2177026350,
+    2456956037,
+    2730485921,
+    2820302411,
+    3259730800,
+    3345764771,
+    3516065817,
+    3600352804,
+    4094571909,
+    275423344,
+    430227734,
+    506948616,
+    659060556,
+    883997877,
+    958139571,
+    1322822218,
+    1537002063,
+    1747873779,
+    1955562222,
+    2024104815,
+    2227730452,
+    2361852424,
+    2428436474,
+    2756734187,
+    3204031479,
+    3329325298
+  ]);
+  var SHA256_W = /* @__PURE__ */ new Uint32Array(64);
+  var SHA2_32B = class extends HashMD {
+    // We cannot use array here since array allows indexing by variable
+    // which means optimizer/compiler cannot use registers.
+    // Numeric initializers matter: starting the fields as `undefined` changes
+    // V8's field representation and makes sha256 3x slower (measured).
+    A = 0;
+    B = 0;
+    C = 0;
+    D = 0;
+    E = 0;
+    F = 0;
+    G = 0;
+    H = 0;
+    constructor(outputLen, IV) {
+      super(64, outputLen, 8, false);
+      this.A = IV[0] | 0;
+      this.B = IV[1] | 0;
+      this.C = IV[2] | 0;
+      this.D = IV[3] | 0;
+      this.E = IV[4] | 0;
+      this.F = IV[5] | 0;
+      this.G = IV[6] | 0;
+      this.H = IV[7] | 0;
+    }
+    get() {
+      const { A, B, C, D, E, F, G, H } = this;
+      return [A, B, C, D, E, F, G, H];
+    }
+    // prettier-ignore
+    set(A, B, C, D, E, F, G, H) {
+      this.A = A | 0;
+      this.B = B | 0;
+      this.C = C | 0;
+      this.D = D | 0;
+      this.E = E | 0;
+      this.F = F | 0;
+      this.G = G | 0;
+      this.H = H | 0;
+    }
+    _cloneInto(to) {
+      (to ||= new this.constructor()).set(...this.get());
+      return this._cloneIntoMeta(to);
+    }
+    process(view, offset) {
+      for (let i2 = 0; i2 < 16; i2++, offset += 4)
+        SHA256_W[i2] = view.getUint32(offset, false);
+      for (let i2 = 16; i2 < 64; i2++) {
+        const W15 = SHA256_W[i2 - 15];
+        const W2 = SHA256_W[i2 - 2];
+        const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3;
+        const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;
+        SHA256_W[i2] = s1 + SHA256_W[i2 - 7] + s0 + SHA256_W[i2 - 16] | 0;
+      }
+      let { A, B, C, D, E, F, G, H } = this;
+      for (let i2 = 0; i2 < 64; i2++) {
+        const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);
+        const T1 = H + sigma1 + Chi(E, F, G) + SHA256_K[i2] + SHA256_W[i2] | 0;
+        const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);
+        const T2 = sigma0 + Maj(A, B, C) | 0;
+        H = G;
+        G = F;
+        F = E;
+        E = D + T1 | 0;
+        D = C;
+        C = B;
+        B = A;
+        A = T1 + T2 | 0;
+      }
+      A = A + this.A | 0;
+      B = B + this.B | 0;
+      C = C + this.C | 0;
+      D = D + this.D | 0;
+      E = E + this.E | 0;
+      F = F + this.F | 0;
+      G = G + this.G | 0;
+      H = H + this.H | 0;
+      this.set(A, B, C, D, E, F, G, H);
+    }
+    roundClean() {
+      clean(SHA256_W);
+    }
+    destroy() {
+      this.destroyed = true;
+      this.set(0, 0, 0, 0, 0, 0, 0, 0);
+      clean(this.buffer);
+    }
+  };
+  var _SHA256 = class extends SHA2_32B {
+    constructor() {
+      super(32, SHA256_IV);
+    }
+  };
+  var sha256 = /* @__PURE__ */ createHasher(
+    () => new _SHA256(),
+    /* @__PURE__ */ oidNist(1)
+  );
+
+  // src/protocol/layout.ts
+  var MIB = 1024 ** 2;
+  var GIB = 1024 ** 3;
+  var RECORD_BYTES = MIB;
+  var RECORDS_PER_PART = 16;
+  var MAX_PACKAGE_BYTES = 64 * GIB;
+  var MAX_FILES = 25;
+  var DEFAULT_ACTIVE_INVITATIONS = 20;
+  var MAX_PART_BYTES = RECORD_BYTES * RECORDS_PER_PART;
+  var MAX_MANIFEST_BYTES = 384 * 1024;
+
+  // src/protocol/crypto.ts
+  var text = new TextEncoder();
+  var decoder = new TextDecoder("utf-8", { fatal: true });
+  var empty = new Uint8Array();
+  function encodeBytes(value) {
+    let binary = "";
+    for (let offset = 0; offset < value.length; offset += 8192) {
+      binary += String.fromCharCode(...value.subarray(offset, offset + 8192));
+    }
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function decodeBytes(value, length) {
+    if (!/^[\w-]*$/.test(value)) throw new Error("Invalid encoded data.");
+    const binary = atob(value.replace(/-/g, "+").replace(/_/g, "/"));
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    if (length !== void 0 && bytes.length !== length || encodeBytes(bytes) !== value) {
+      throw new Error("Invalid encoded length.");
+    }
+    return bytes;
+  }
+  function randomSecret() {
+    return crypto.getRandomValues(new Uint8Array(32));
+  }
+
+  // src/protocol/manifest.ts
+  var sha = /^[a-f0-9]{64}$/;
+  var MAX_DEPENDENCIES = 100;
+  function object(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid manifest.");
+    return value;
+  }
+  function string(value, max) {
+    if (typeof value !== "string" || value.length > max) throw new Error("Invalid manifest text.");
+    return value;
+  }
+  function optionalText(value, length) {
+    return value === void 0 ? void 0 : string(value, length).trim() || void 0;
+  }
+  function validateDependencies(input) {
+    if (!Array.isArray(input) || input.length > MAX_DEPENDENCIES) throw new Error(`Use an array of up to ${MAX_DEPENDENCIES} Civitai dependencies.`);
+    return input.map((value) => {
+      const item = object(value);
+      const air = string(item.air, 160);
+      const match = air.match(/^urn:air:[a-z0-9_-]+:[a-z0-9_-]+:civitai:([1-9][0-9]*)@([1-9][0-9]*)$/i);
+      if (!match || !Number.isSafeInteger(item.modelId) || !Number.isSafeInteger(item.versionId) || Number(match[1]) !== item.modelId || Number(match[2]) !== item.versionId) throw new Error("A Civitai dependency is missing its exact model and version identity.");
+      const sha2563 = item.sha256 === void 0 ? void 0 : string(item.sha256, 64).toLowerCase();
+      if (sha2563 !== void 0 && !sha.test(sha2563)) throw new Error("Invalid dependency SHA-256.");
+      const fileId = item.fileId;
+      if (fileId !== void 0 && (typeof fileId !== "number" || !Number.isSafeInteger(fileId) || fileId < 1)) throw new Error("Invalid Civitai file ID.");
+      const size = item.size;
+      if (size !== void 0 && (typeof size !== "number" || !Number.isSafeInteger(size) || size < 0)) throw new Error("Invalid dependency size.");
+      const relationship = optionalText(item.relationship, 160);
+      return {
+        air,
+        modelId: item.modelId,
+        versionId: item.versionId,
+        sha256: sha2563,
+        ...fileId !== void 0 ? { fileId } : {},
+        ...size !== void 0 ? { size } : {},
+        ...relationship ? { relationship } : {}
+      };
+    });
+  }
+
+  // src/civitai/model-identities.ts
+  function isRecord(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+  function isId(value) {
+    return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+  }
+  function digest(hashes) {
+    const sha2563 = isRecord(hashes) && hashes.SHA256;
+    return typeof sha2563 === "string" && /^[a-f0-9]{64}$/i.test(sha2563) ? sha2563.toLowerCase() : void 0;
+  }
+  function catalogModelFiles(value) {
+    const files = /* @__PURE__ */ new Map();
+    if (!Array.isArray(value)) return files;
+    for (const file of value) {
+      if (!isRecord(file) || !isId(file.id)) continue;
+      if (files.has(file.id)) throw new Error("Civitai returned a duplicate file ID.");
+      const bytes = typeof file.sizeKB === "number" ? file.sizeKB * 1024 : 0;
+      files.set(file.id, {
+        name: typeof file.name === "string" ? file.name.slice(0, 200) : `File ${file.id}`,
+        fileId: file.id,
+        sha256: digest(file.hashes),
+        ...Number.isSafeInteger(bytes) && bytes > 0 ? { size: bytes } : {}
+      });
+    }
+    return files;
+  }
+
+  // node_modules/@civitai/app-sdk/dist/save-model3d/index.js
+  var SAVE_MODEL3D_EXTENSION = {
+    // IANA-registered.
+    "model/gltf-binary": "glb",
+    // FBX has no registered media type; this names it for the Blob without claiming a registration.
+    "model/x-fbx": "fbx"
+  };
+  var SAVE_MODEL3D_MAX_BYTES = 100 * 1024 * 1024;
+  var SAVE_MODEL3D_MAX_JSON_CHUNK_BYTES = 8 * 1024 * 1024;
+  var GLB_PREFIX = [103, 108, 84, 70, 2, 0, 0, 0];
+  var GLB_HEADER_BYTES = 12;
+  var GLB_CHUNK_HEADER_BYTES = 8;
+  var GLB_CHUNK_JSON = 1313821514;
+  var GLB_CHUNK_BIN = 5130562;
+  var FBX_MAGIC = [
+    75,
+    97,
+    121,
+    100,
+    97,
+    114,
+    97,
+    32,
+    70,
+    66,
+    88,
+    32,
+    66,
+    105,
+    110,
+    97,
+    114,
+    121,
+    32,
+    32,
+    0
+  ];
+  var FBX_HEADER_BYTES = 27;
+  var FBX_MIN_VERSION = 6100;
+  var FBX_MAX_VERSION = 7999;
+  var FBX_WIDE_RECORD_VERSION = 7500;
+  var FBX_MAX_TAIL_BYTES = 256;
+  function startsWith(u82, sig) {
+    if (u82.length < sig.length)
+      return false;
+    for (let i2 = 0; i2 < sig.length; i2++)
+      if (u82[i2] !== sig[i2])
+        return false;
+    return true;
+  }
+  function looksLikeSaveModel3d(view) {
+    if (startsWith(view, GLB_PREFIX))
+      return "model/gltf-binary";
+    if (startsWith(view, FBX_MAGIC))
+      return "model/x-fbx";
+    return null;
+  }
+  function isValidSaveModel3d(view, type) {
+    return type === "model/gltf-binary" ? isValidGlb(view) : isValidFbx(view);
+  }
+  function isValidGlb(u82) {
+    if (u82.length < GLB_HEADER_BYTES + GLB_CHUNK_HEADER_BYTES)
+      return false;
+    if (!startsWith(u82, GLB_PREFIX))
+      return false;
+    const view = new DataView(u82.buffer, u82.byteOffset, u82.byteLength);
+    const length = view.getUint32(8, true);
+    if (length !== u82.length || length % 4 !== 0)
+      return false;
+    let offset = GLB_HEADER_BYTES;
+    let index = 0;
+    while (offset < length) {
+      if (length - offset < GLB_CHUNK_HEADER_BYTES)
+        return false;
+      const chunkLength = view.getUint32(offset, true);
+      const chunkType = view.getUint32(offset + 4, true);
+      const dataStart = offset + GLB_CHUNK_HEADER_BYTES;
+      if (chunkLength % 4 !== 0 || chunkLength > length - dataStart)
+        return false;
+      if (index === 0) {
+        if (chunkType !== GLB_CHUNK_JSON || chunkLength === 0)
+          return false;
+        if (chunkLength > SAVE_MODEL3D_MAX_JSON_CHUNK_BYTES)
+          return false;
+        if (!isGltfJson(u82.subarray(dataStart, dataStart + chunkLength)))
+          return false;
+      } else if (chunkType === GLB_CHUNK_JSON || chunkType === GLB_CHUNK_BIN && index !== 1) {
+        return false;
+      }
+      offset = dataStart + chunkLength;
+      index += 1;
+    }
+    return index >= 1 && offset === length;
+  }
+  function isGltfJson(bytes) {
+    let doc;
+    try {
+      doc = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    } catch {
+      return false;
+    }
+    if (!doc || typeof doc !== "object" || Array.isArray(doc))
+      return false;
+    const asset = doc.asset;
+    if (!asset || typeof asset !== "object" || Array.isArray(asset))
+      return false;
+    return typeof asset.version === "string";
+  }
+  function isValidFbx(u82) {
+    if (u82.length < FBX_HEADER_BYTES)
+      return false;
+    if (!startsWith(u82, FBX_MAGIC) || u82[21] !== 26 || u82[22] !== 0)
+      return false;
+    const view = new DataView(u82.buffer, u82.byteOffset, u82.byteLength);
+    const version = view.getUint32(23, true);
+    if (version < FBX_MIN_VERSION || version > FBX_MAX_VERSION)
+      return false;
+    const wide = version >= FBX_WIDE_RECORD_VERSION;
+    const fieldBytes = wide ? 8 : 4;
+    const recordHeaderBytes = fieldBytes * 3 + 1;
+    const readField = (at) => wide ? Number(view.getBigUint64(at, true)) : view.getUint32(at, true);
+    let offset = FBX_HEADER_BYTES;
+    let nodes = 0;
+    for (; ; ) {
+      if (u82.length - offset < recordHeaderBytes)
+        return false;
+      const endOffset = readField(offset);
+      const numProperties = readField(offset + fieldBytes);
+      const propertyListLength = readField(offset + fieldBytes * 2);
+      const nameLength = u82[offset + fieldBytes * 3];
+      if (endOffset === 0) {
+        if (numProperties !== 0 || propertyListLength !== 0 || nameLength !== 0)
+          return false;
+        const tail = u82.length - (offset + recordHeaderBytes);
+        return nodes > 0 && tail <= FBX_MAX_TAIL_BYTES;
+      }
+      const nameStart = offset + recordHeaderBytes;
+      const bodyStart = nameStart + nameLength;
+      if (nameLength === 0 || endOffset < bodyStart || endOffset > u82.length)
+        return false;
+      if (propertyListLength > endOffset - bodyStart)
+        return false;
+      for (let i2 = nameStart; i2 < bodyStart; i2++) {
+        const c = u82[i2];
+        if (c < 32 || c > 126)
+          return false;
+      }
+      offset = endOffset;
+      nodes += 1;
+    }
+  }
+
+  // node_modules/@civitai/app-sdk/dist/save-zip/index.js
+  var SAVE_ZIP_MAX_BYTES = 256 * 1024 * 1024;
+  var SAVE_ZIP_LIMITS = {
+    maxEntries: 1e4,
+    maxTotalUncompressedBytes: 1024 * 1024 * 1024,
+    maxEntryRatio: 100,
+    ratioFloorBytes: 1024 * 1024
+  };
+  var SAVE_ZIP_ALLOWED_EXTENSIONS = /* @__PURE__ */ new Set([
+    "png",
+    "jpg",
+    "jpeg",
+    "webp",
+    "txt",
+    "json",
+    "csv",
+    "glb",
+    "fbx"
+  ]);
+  var SAVE_ZIP_NO_EOCD_ERROR = "zip end of central directory not found (archive comments are not allowed)";
+  var SAVE_ZIP_MULTIDISK_ERROR = "zip spans multiple disks";
+  var SAVE_ZIP64_ERROR = "zip64 archives are not supported";
+  var SAVE_ZIP_EMPTY_ERROR = "zip has no entries";
+  var SAVE_ZIP_TOO_MANY_ENTRIES_ERROR = "zip has too many entries";
+  var SAVE_ZIP_LAYOUT_ERROR = "zip layout is not contiguous";
+  var SAVE_ZIP_TRUNCATED_ERROR = "zip is truncated";
+  var SAVE_ZIP_CENTRAL_DIRECTORY_ERROR = "zip central directory is malformed";
+  var SAVE_ZIP_EXTRA_FIELD_ERROR = "zip extra field is malformed";
+  var SAVE_ZIP_LOCAL_HEADER_ERROR = "zip local header is malformed";
+  var SAVE_ZIP_HEADER_MISMATCH_ERROR = "zip local header does not match the central directory";
+  var SAVE_ZIP_DATA_DESCRIPTOR_ERROR = "zip data descriptor does not match the central directory";
+  var SAVE_ZIP_ENCRYPTED_ERROR = "zip entry is encrypted";
+  var SAVE_ZIP_FLAGS_ERROR = "zip entry uses an unsupported feature";
+  var SAVE_ZIP_METHOD_NOT_ALLOWED_ERROR = "zip compression method is not allowed";
+  var SAVE_ZIP_ENTRY_TYPE_NOT_ALLOWED_ERROR = "zip entry type is not allowed";
+  var SAVE_ZIP_NAME_ENCODING_ERROR = "zip entry name is not valid UTF-8 or ASCII";
+  var SAVE_ZIP_ALTERNATE_PATH_ERROR = "zip entry carries an alternate path field";
+  var SAVE_ZIP_CONTROL_CHAR_ERROR = "zip entry name contains control or bidi characters";
+  var SAVE_ZIP_ABSOLUTE_PATH_ERROR = "zip entry path is absolute";
+  var SAVE_ZIP_BACKSLASH_ERROR = "zip entry path contains a backslash";
+  var SAVE_ZIP_DRIVE_OR_COLON_ERROR = "zip entry path contains a drive letter or colon";
+  var SAVE_ZIP_TRAVERSAL_ERROR = "zip entry path contains a .. segment";
+  var SAVE_ZIP_EMPTY_SEGMENT_ERROR = "zip entry path contains an empty or . segment";
+  var SAVE_ZIP_DUPLICATE_NAME_ERROR = "zip has duplicate entry names";
+  var SAVE_ZIP_PATH_CONFLICT_ERROR = "zip entry is inside a path that is a file";
+  var SAVE_ZIP_SPECIAL_FILE_ERROR = "zip entry is not a regular file or directory";
+  var SAVE_ZIP_DIRECTORY_DATA_ERROR = "zip directory entry has data";
+  var SAVE_ZIP_STORED_SIZE_ERROR = "zip stored entry sizes disagree";
+  var SAVE_ZIP_TOTAL_SIZE_ERROR = "zip total uncompressed size exceeds the limit";
+  var SAVE_ZIP_RATIO_ERROR = "zip entry compression ratio exceeds the limit";
+  var SAVE_ZIP_INFLATE_ERROR = "zip entry does not inflate to its declared size";
+  var SAVE_ZIP_INFLATE_TRAILING_ERROR = "zip entry has data after the end of its deflate stream";
+  var SAVE_ZIP_CRC_ERROR = "zip entry does not match its CRC-32";
+  var SAVE_ZIP_VERIFY_ABORTED_ERROR = "zip verification was aborted";
+  var SaveZipVerifyAbortedError = class extends Error {
+    constructor() {
+      super(SAVE_ZIP_VERIFY_ABORTED_ERROR);
+      this.name = "SaveZipVerifyAbortedError";
+    }
+  };
+  var SAVE_ZIP_INFLATE_SLICE_BYTES = 16 * 1024;
+  var SAVE_ZIP_STORED_DESCRIPTOR_SIGNATURE_ERROR = "zip stored entry with a data descriptor contains a data-descriptor signature (PK\\x07\\x08); save it with DEFLATE or without streamFiles";
+  var SAVE_ZIP_STORED_LOCAL_SIGNATURE_ERROR = "zip stored entry with a data descriptor contains a local-header signature (PK\\x03\\x04); save it with DEFLATE or without streamFiles";
+  var SAVE_ZIP_SEGMENT_DOT_SPACE_ERROR = "zip entry path has a segment that ends in a dot or space";
+  var SAVE_ZIP_EXTRA_FIELD_NOT_ALLOWED_ERROR = "zip extra field is not allowed";
+  function saveZipMethodError(method) {
+    return `${SAVE_ZIP_METHOD_NOT_ALLOWED_ERROR}: ${method}`;
+  }
+  function saveZipExtraFieldError(id) {
+    return `${SAVE_ZIP_EXTRA_FIELD_NOT_ALLOWED_ERROR}: 0x${id.toString(16).padStart(4, "0")}`;
+  }
+  function saveZipEntryTypeError(ext) {
+    return `${SAVE_ZIP_ENTRY_TYPE_NOT_ALLOWED_ERROR}: ${ext.length > 0 ? ext : "(none)"}`;
+  }
+  var SIG_LOCAL = 67324752;
+  var SIG_CENTRAL = 33639248;
+  var SIG_EOCD = 101010256;
+  var SIG_ZIP64_LOCATOR = 117853008;
+  var SIG_DATA_DESCRIPTOR = 134695760;
+  var EOCD_LEN = 22;
+  var ZIP64_LOCATOR_LEN = 20;
+  var CENTRAL_LEN = 46;
+  var LOCAL_LEN = 30;
+  var METHOD_STORED = 0;
+  var METHOD_DEFLATE = 8;
+  var FLAG_ENCRYPTED = 1 << 0;
+  var FLAG_DATA_DESCRIPTOR = 1 << 3;
+  var FLAG_STRONG_ENCRYPTION = 1 << 6;
+  var FLAG_UTF8 = 1 << 11;
+  var FLAG_MASKED_HEADERS = 1 << 13;
+  var FLAGS_ALLOWED = 1 << 1 | 1 << 2 | FLAG_DATA_DESCRIPTOR | FLAG_UTF8;
+  var EXTRA_ZIP64 = 1;
+  var EXTRA_STRONG_ENCRYPTION = 23;
+  var EXTRA_UNICODE_PATH = 28789;
+  var EXTRA_AES = 39169;
+  var EXTRA_ALLOWED = /* @__PURE__ */ new Set([21589, 10, 30837, EXTRA_UNICODE_PATH]);
+  var S_IFMT = 61440;
+  var S_IFREG = 32768;
+  var S_IFDIR = 16384;
+  var ZipRefusal = class extends Error {
+  };
+  function refuse(error) {
+    throw new ZipRefusal(error);
+  }
+  var utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+  var crcTable;
+  function crc32(bytes, previous = 0) {
+    if (!crcTable) {
+      crcTable = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c2 = n;
+        for (let k = 0; k < 8; k++)
+          c2 = c2 & 1 ? 3988292384 ^ c2 >>> 1 : c2 >>> 1;
+        crcTable[n] = c2 >>> 0;
+      }
+    }
+    const t = crcTable;
+    let c = (previous ^ 4294967295) >>> 0;
+    for (let i2 = 0; i2 < bytes.length; i2++)
+      c = t[(c ^ bytes[i2]) & 255] ^ c >>> 8;
+    return (c ^ 4294967295) >>> 0;
+  }
+  function checkStoredStreamedData(u82, start, end) {
+    for (let i2 = u82.indexOf(80, start); i2 >= 0 && i2 + 3 < end; i2 = u82.indexOf(80, i2 + 1)) {
+      if (u82[i2 + 1] !== 75)
+        continue;
+      if (u82[i2 + 2] === 7 && u82[i2 + 3] === 8)
+        refuse(SAVE_ZIP_STORED_DESCRIPTOR_SIGNATURE_ERROR);
+      if (u82[i2 + 2] === 3 && u82[i2 + 3] === 4)
+        refuse(SAVE_ZIP_STORED_LOCAL_SIGNATURE_ERROR);
+    }
+  }
+  function checkUnicodePath(view, p, size, name, flags) {
+    if (!(flags & FLAG_UTF8) || size < 5 || view.getUint8(p) !== 1) {
+      refuse(SAVE_ZIP_ALTERNATE_PATH_ERROR);
+    }
+    if (view.getUint32(p + 1, true) !== crc32(name))
+      refuse(SAVE_ZIP_ALTERNATE_PATH_ERROR);
+    const alt = new Uint8Array(view.buffer, view.byteOffset + p + 5, size - 5);
+    if (alt.length !== name.length || alt.some((b, i2) => b !== name[i2])) {
+      refuse(SAVE_ZIP_ALTERNATE_PATH_ERROR);
+    }
+  }
+  function checkExtraFields(view, start, len, name, flags) {
+    let p = start;
+    const end = start + len;
+    while (p < end) {
+      if (p + 4 > end)
+        refuse(SAVE_ZIP_EXTRA_FIELD_ERROR);
+      const id = view.getUint16(p, true);
+      const size = view.getUint16(p + 2, true);
+      p += 4;
+      if (p + size > end)
+        refuse(SAVE_ZIP_EXTRA_FIELD_ERROR);
+      if (id === EXTRA_ZIP64)
+        refuse(SAVE_ZIP64_ERROR);
+      if (id === EXTRA_STRONG_ENCRYPTION || id === EXTRA_AES)
+        refuse(SAVE_ZIP_ENCRYPTED_ERROR);
+      if (!EXTRA_ALLOWED.has(id))
+        refuse(saveZipExtraFieldError(id));
+      if (id === EXTRA_UNICODE_PATH)
+        checkUnicodePath(view, p, size, name, flags);
+      p += size;
+    }
+  }
+  function decodeName(bytes, flags) {
+    if (flags & FLAG_UTF8) {
+      try {
+        return utf8.decode(bytes);
+      } catch {
+        refuse(SAVE_ZIP_NAME_ENCODING_ERROR);
+      }
+    }
+    for (const b of bytes)
+      if (b >= 128)
+        refuse(SAVE_ZIP_NAME_ENCODING_ERROR);
+    return utf8.decode(bytes);
+  }
+  function checkName(name) {
+    if (name.length === 0)
+      refuse(SAVE_ZIP_EMPTY_SEGMENT_ERROR);
+    if (/[\p{Cc}\p{Cf}]/u.test(name))
+      refuse(SAVE_ZIP_CONTROL_CHAR_ERROR);
+    if (name.includes("\\"))
+      refuse(SAVE_ZIP_BACKSLASH_ERROR);
+    if (name.startsWith("/"))
+      refuse(SAVE_ZIP_ABSOLUTE_PATH_ERROR);
+    if (name.includes(":"))
+      refuse(SAVE_ZIP_DRIVE_OR_COLON_ERROR);
+    const isDir = name.endsWith("/");
+    const segments = (isDir ? name.slice(0, -1) : name).split("/");
+    for (const seg of segments) {
+      if (seg === "..")
+        refuse(SAVE_ZIP_TRAVERSAL_ERROR);
+      if (seg === "" || seg === ".")
+        refuse(SAVE_ZIP_EMPTY_SEGMENT_ERROR);
+      if (seg.endsWith(".") || seg.endsWith(" "))
+        refuse(SAVE_ZIP_SEGMENT_DOT_SPACE_ERROR);
+    }
+    if (!isDir) {
+      const last = segments[segments.length - 1] ?? "";
+      const dot = last.lastIndexOf(".");
+      const ext = dot >= 0 ? last.slice(dot + 1).toLowerCase() : "";
+      if (!SAVE_ZIP_ALLOWED_EXTENSIONS.has(ext))
+        refuse(saveZipEntryTypeError(ext));
+    }
+    return { isDir };
+  }
+  function validate(bytes) {
+    const u82 = new Uint8Array(bytes);
+    const view = new DataView(bytes);
+    const len = u82.length;
+    if (len < EOCD_LEN)
+      refuse(SAVE_ZIP_TRUNCATED_ERROR);
+    const eocd = len - EOCD_LEN;
+    if (view.getUint32(eocd, true) !== SIG_EOCD)
+      refuse(SAVE_ZIP_NO_EOCD_ERROR);
+    if (eocd >= ZIP64_LOCATOR_LEN && view.getUint32(eocd - ZIP64_LOCATOR_LEN, true) === SIG_ZIP64_LOCATOR) {
+      refuse(SAVE_ZIP64_ERROR);
+    }
+    const diskNumber = view.getUint16(eocd + 4, true);
+    const cdDisk = view.getUint16(eocd + 6, true);
+    const entriesOnDisk = view.getUint16(eocd + 8, true);
+    const totalEntries = view.getUint16(eocd + 10, true);
+    const cdSize = view.getUint32(eocd + 12, true);
+    const cdOffset = view.getUint32(eocd + 16, true);
+    const commentLen = view.getUint16(eocd + 20, true);
+    if (totalEntries === 65535 || cdSize === 4294967295 || cdOffset === 4294967295) {
+      refuse(SAVE_ZIP64_ERROR);
+    }
+    if (commentLen !== 0)
+      refuse(SAVE_ZIP_NO_EOCD_ERROR);
+    if (diskNumber !== 0 || cdDisk !== 0 || entriesOnDisk !== totalEntries) {
+      refuse(SAVE_ZIP_MULTIDISK_ERROR);
+    }
+    if (totalEntries === 0)
+      refuse(SAVE_ZIP_EMPTY_ERROR);
+    if (totalEntries > SAVE_ZIP_LIMITS.maxEntries)
+      refuse(SAVE_ZIP_TOO_MANY_ENTRIES_ERROR);
+    if (cdOffset + cdSize !== eocd)
+      refuse(SAVE_ZIP_LAYOUT_ERROR);
+    const entries = [];
+    let p = cdOffset;
+    for (let i2 = 0; i2 < totalEntries; i2++) {
+      if (p + CENTRAL_LEN > eocd)
+        refuse(SAVE_ZIP_CENTRAL_DIRECTORY_ERROR);
+      if (view.getUint32(p, true) !== SIG_CENTRAL)
+        refuse(SAVE_ZIP_CENTRAL_DIRECTORY_ERROR);
+      const flags = view.getUint16(p + 8, true);
+      const method = view.getUint16(p + 10, true);
+      const crc2 = view.getUint32(p + 16, true);
+      const compressedSize = view.getUint32(p + 20, true);
+      const size = view.getUint32(p + 24, true);
+      const nameLen = view.getUint16(p + 28, true);
+      const extraLen = view.getUint16(p + 30, true);
+      const commentLength = view.getUint16(p + 32, true);
+      const diskStart = view.getUint16(p + 34, true);
+      const externalAttrs = view.getUint32(p + 38, true);
+      const localOffset = view.getUint32(p + 42, true);
+      const recordEnd = p + CENTRAL_LEN + nameLen + extraLen + commentLength;
+      if (recordEnd > eocd)
+        refuse(SAVE_ZIP_CENTRAL_DIRECTORY_ERROR);
+      if (compressedSize === 4294967295 || size === 4294967295 || localOffset === 4294967295) {
+        refuse(SAVE_ZIP64_ERROR);
+      }
+      if (diskStart !== 0)
+        refuse(SAVE_ZIP_MULTIDISK_ERROR);
+      checkExtraFields(view, p + CENTRAL_LEN + nameLen, extraLen, u82.subarray(p + CENTRAL_LEN, p + CENTRAL_LEN + nameLen), flags);
+      if (flags & (FLAG_ENCRYPTED | FLAG_STRONG_ENCRYPTION | FLAG_MASKED_HEADERS)) {
+        refuse(SAVE_ZIP_ENCRYPTED_ERROR);
+      }
+      if (flags & ~FLAGS_ALLOWED)
+        refuse(SAVE_ZIP_FLAGS_ERROR);
+      if (method !== METHOD_STORED && method !== METHOD_DEFLATE)
+        refuse(saveZipMethodError(method));
+      const fileType = externalAttrs >>> 16 & S_IFMT;
+      if (fileType !== 0 && fileType !== S_IFREG && fileType !== S_IFDIR) {
+        refuse(SAVE_ZIP_SPECIAL_FILE_ERROR);
+      }
+      entries.push({
+        name: u82.subarray(p + CENTRAL_LEN, p + CENTRAL_LEN + nameLen),
+        flags,
+        method,
+        crc: crc2,
+        compressedSize,
+        size,
+        localOffset
+      });
+      p = recordEnd;
+    }
+    if (p !== eocd)
+      refuse(SAVE_ZIP_CENTRAL_DIRECTORY_ERROR);
+    const seen = /* @__PURE__ */ new Set();
+    const files = /* @__PURE__ */ new Set();
+    const paths = [];
+    let total = 0;
+    for (const e of entries) {
+      const name = decodeName(e.name, e.flags);
+      const { isDir } = checkName(name);
+      const key = (isDir ? name.slice(0, -1) : name).normalize("NFC").toLowerCase();
+      if (seen.has(key))
+        refuse(SAVE_ZIP_DUPLICATE_NAME_ERROR);
+      seen.add(key);
+      if (!isDir)
+        files.add(key);
+      paths.push({ key, isDir });
+      if (isDir && (e.size !== 0 || e.compressedSize !== 0))
+        refuse(SAVE_ZIP_DIRECTORY_DATA_ERROR);
+      if (e.method === METHOD_STORED && e.compressedSize !== e.size) {
+        refuse(SAVE_ZIP_STORED_SIZE_ERROR);
+      }
+      total += e.size;
+      if (total > SAVE_ZIP_LIMITS.maxTotalUncompressedBytes)
+        refuse(SAVE_ZIP_TOTAL_SIZE_ERROR);
+      if (e.size > SAVE_ZIP_LIMITS.ratioFloorBytes && e.size > SAVE_ZIP_LIMITS.maxEntryRatio * e.compressedSize) {
+        refuse(SAVE_ZIP_RATIO_ERROR);
+      }
+    }
+    for (const { key } of paths) {
+      let slash = key.indexOf("/");
+      while (slash >= 0) {
+        if (files.has(key.slice(0, slash)))
+          refuse(SAVE_ZIP_PATH_CONFLICT_ERROR);
+        slash = key.indexOf("/", slash + 1);
+      }
+    }
+    const deflated = [];
+    let cursor = 0;
+    for (const [i2, e] of entries.entries()) {
+      if (e.localOffset !== cursor)
+        refuse(SAVE_ZIP_LAYOUT_ERROR);
+      if (cursor + LOCAL_LEN > cdOffset)
+        refuse(SAVE_ZIP_TRUNCATED_ERROR);
+      if (view.getUint32(cursor, true) !== SIG_LOCAL)
+        refuse(SAVE_ZIP_LOCAL_HEADER_ERROR);
+      const flags = view.getUint16(cursor + 6, true);
+      const method = view.getUint16(cursor + 8, true);
+      const crc2 = view.getUint32(cursor + 14, true);
+      const compressedSize = view.getUint32(cursor + 18, true);
+      const size = view.getUint32(cursor + 22, true);
+      const nameLen = view.getUint16(cursor + 26, true);
+      const extraLen = view.getUint16(cursor + 28, true);
+      const nameStart = cursor + LOCAL_LEN;
+      const dataOffset = nameStart + nameLen + extraLen;
+      if (dataOffset > cdOffset)
+        refuse(SAVE_ZIP_TRUNCATED_ERROR);
+      const localName = u82.subarray(nameStart, nameStart + nameLen);
+      if (localName.length !== e.name.length || localName.some((b, j) => b !== e.name[j])) {
+        refuse(SAVE_ZIP_HEADER_MISMATCH_ERROR);
+      }
+      if (flags !== e.flags || method !== e.method)
+        refuse(SAVE_ZIP_HEADER_MISMATCH_ERROR);
+      checkExtraFields(view, nameStart + nameLen, extraLen, localName, flags);
+      const hasDescriptor = (e.flags & FLAG_DATA_DESCRIPTOR) !== 0;
+      const localZero = crc2 === 0 && compressedSize === 0 && size === 0;
+      const localMatches = crc2 === e.crc && compressedSize === e.compressedSize && size === e.size;
+      if (!localMatches && !(hasDescriptor && localZero))
+        refuse(SAVE_ZIP_HEADER_MISMATCH_ERROR);
+      const dataEnd = dataOffset + e.compressedSize;
+      if (dataEnd > cdOffset)
+        refuse(SAVE_ZIP_TRUNCATED_ERROR);
+      const next = entries[i2 + 1]?.localOffset ?? cdOffset;
+      const descriptorLen = next - dataEnd;
+      if (!hasDescriptor) {
+        if (descriptorLen !== 0)
+          refuse(SAVE_ZIP_LAYOUT_ERROR);
+      } else {
+        let d = dataEnd;
+        if (descriptorLen === 16) {
+          if (view.getUint32(d, true) !== SIG_DATA_DESCRIPTOR)
+            refuse(SAVE_ZIP_DATA_DESCRIPTOR_ERROR);
+          d += 4;
+        } else if (descriptorLen !== 12) {
+          refuse(SAVE_ZIP_DATA_DESCRIPTOR_ERROR);
+        }
+        if (view.getUint32(d, true) !== e.crc || view.getUint32(d + 4, true) !== e.compressedSize || view.getUint32(d + 8, true) !== e.size) {
+          refuse(SAVE_ZIP_DATA_DESCRIPTOR_ERROR);
+        }
+      }
+      if (e.method === METHOD_DEFLATE) {
+        deflated.push({ dataOffset, compressedSize: e.compressedSize, size: e.size, crc: e.crc });
+      } else {
+        if (hasDescriptor)
+          checkStoredStreamedData(u82, dataOffset, dataEnd);
+        if (crc32(u82.subarray(dataOffset, dataEnd)) !== e.crc)
+          refuse(SAVE_ZIP_CRC_ERROR);
+      }
+      cursor = next;
+    }
+    return { ok: true, entryCount: entries.length, deflated };
+  }
+  function validateSaveZip(bytes) {
+    try {
+      return validate(bytes);
+    } catch (err2) {
+      if (err2 instanceof ZipRefusal)
+        return { ok: false, error: err2.message };
+      if (err2 instanceof RangeError)
+        return { ok: false, error: SAVE_ZIP_TRUNCATED_ERROR };
+      throw err2;
+    }
+  }
+  async function inflate(data, limit, signal) {
+    if (signal?.aborted)
+      throw new SaveZipVerifyAbortedError();
+    const ds = new DecompressionStream("deflate-raw");
+    const writer = ds.writable.getWriter();
+    const reader = ds.readable.getReader();
+    const CHUNK = SAVE_ZIP_INFLATE_SLICE_BYTES;
+    const feed = (async () => {
+      for (let off = 0; off < data.length; off += CHUNK) {
+        await writer.write(data.subarray(off, Math.min(off + CHUNK, data.length)));
+      }
+      await writer.close();
+    })();
+    feed.catch(() => void 0);
+    const onAbort = () => {
+      void reader.cancel().catch(() => void 0);
+      void writer.abort().catch(() => void 0);
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    let produced = 0;
+    let crc2 = 0;
+    try {
+      for (; ; ) {
+        const { done, value } = await reader.read();
+        if (done)
+          break;
+        produced += value.byteLength;
+        if (produced > limit) {
+          await reader.cancel().catch(() => void 0);
+          await writer.abort().catch(() => void 0);
+          return null;
+        }
+        crc2 = crc32(value, crc2);
+      }
+      await feed;
+    } catch {
+      if (signal?.aborted)
+        throw new SaveZipVerifyAbortedError();
+      return null;
+    } finally {
+      signal?.removeEventListener("abort", onAbort);
+    }
+    if (signal?.aborted)
+      throw new SaveZipVerifyAbortedError();
+    return { produced, crc: crc2 };
+  }
+  async function checkDeflatedEntry(u82, e, signal) {
+    const data = u82.subarray(e.dataOffset, e.dataOffset + e.compressedSize);
+    const [full, short] = await Promise.all([
+      inflate(data, e.size, signal),
+      data.length > 0 ? inflate(data.subarray(0, data.length - 1), e.size, signal) : Promise.resolve(null)
+    ]);
+    if (!full || full.produced !== e.size)
+      return SAVE_ZIP_INFLATE_ERROR;
+    if (short && short.produced === e.size)
+      return SAVE_ZIP_INFLATE_TRAILING_ERROR;
+    if (full.crc !== e.crc)
+      return SAVE_ZIP_CRC_ERROR;
+    return null;
+  }
+  async function verifySaveZipInflate(bytes, deflated, signal) {
+    if (signal?.aborted)
+      throw new SaveZipVerifyAbortedError();
+    const u82 = new Uint8Array(bytes);
+    for (const e of deflated) {
+      const error = await checkDeflatedEntry(u82, e, signal);
+      if (error)
+        return error;
+    }
+    return null;
+  }
+
+  // node_modules/fflate/esm/browser.js
+  var u8 = Uint8Array;
+  var u16 = Uint16Array;
+  var i32 = Int32Array;
+  var fleb = new u8([
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    0,
+    /* unused */
+    0,
+    0,
+    /* impossible */
+    0
+  ]);
+  var fdeb = new u8([
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    6,
+    6,
+    7,
+    7,
+    8,
+    8,
+    9,
+    9,
+    10,
+    10,
+    11,
+    11,
+    12,
+    12,
+    13,
+    13,
+    /* unused */
+    0,
+    0
+  ]);
+  var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
+  var freb = function(eb, start) {
+    var b = new u16(31);
+    for (var i2 = 0; i2 < 31; ++i2) {
+      b[i2] = start += 1 << eb[i2 - 1];
+    }
+    var r = new i32(b[30]);
+    for (var i2 = 1; i2 < 30; ++i2) {
+      for (var j = b[i2]; j < b[i2 + 1]; ++j) {
+        r[j] = j - b[i2] << 5 | i2;
+      }
+    }
+    return { b, r };
+  };
+  var _a = freb(fleb, 2);
+  var fl = _a.b;
+  var revfl = _a.r;
+  fl[28] = 258, revfl[258] = 28;
+  var _b = freb(fdeb, 0);
+  var fd = _b.b;
+  var revfd = _b.r;
+  var rev = new u16(32768);
+  for (i = 0; i < 32768; ++i) {
+    x = (i & 43690) >> 1 | (i & 21845) << 1;
+    x = (x & 52428) >> 2 | (x & 13107) << 2;
+    x = (x & 61680) >> 4 | (x & 3855) << 4;
+    rev[i] = ((x & 65280) >> 8 | (x & 255) << 8) >> 1;
+  }
+  var x;
+  var i;
+  var hMap = (function(cd, mb, r) {
+    var s = cd.length;
+    var i2 = 0;
+    var l = new u16(mb);
+    for (; i2 < s; ++i2) {
+      if (cd[i2])
+        ++l[cd[i2] - 1];
+    }
+    var le = new u16(mb);
+    for (i2 = 1; i2 < mb; ++i2) {
+      le[i2] = le[i2 - 1] + l[i2 - 1] << 1;
+    }
+    var co;
+    if (r) {
+      co = new u16(1 << mb);
+      var rvb = 15 - mb;
+      for (i2 = 0; i2 < s; ++i2) {
+        if (cd[i2]) {
+          var sv = i2 << 4 | cd[i2];
+          var r_1 = mb - cd[i2];
+          var v = le[cd[i2] - 1]++ << r_1;
+          for (var m = v | (1 << r_1) - 1; v <= m; ++v) {
+            co[rev[v] >> rvb] = sv;
+          }
+        }
+      }
+    } else {
+      co = new u16(s);
+      for (i2 = 0; i2 < s; ++i2) {
+        if (cd[i2]) {
+          co[i2] = rev[le[cd[i2] - 1]++] >> 15 - cd[i2];
+        }
+      }
+    }
+    return co;
+  });
+  var flt = new u8(288);
+  for (i = 0; i < 144; ++i)
+    flt[i] = 8;
+  var i;
+  for (i = 144; i < 256; ++i)
+    flt[i] = 9;
+  var i;
+  for (i = 256; i < 280; ++i)
+    flt[i] = 7;
+  var i;
+  for (i = 280; i < 288; ++i)
+    flt[i] = 8;
+  var i;
+  var fdt = new u8(32);
+  for (i = 0; i < 32; ++i)
+    fdt[i] = 5;
+  var i;
+  var flm = /* @__PURE__ */ hMap(flt, 9, 0);
+  var fdm = /* @__PURE__ */ hMap(fdt, 5, 0);
+  var shft = function(p) {
+    return (p + 7) / 8 | 0;
+  };
+  var slc = function(v, s, e) {
+    if (s == null || s < 0)
+      s = 0;
+    if (e == null || e > v.length)
+      e = v.length;
+    return new u8(v.subarray(s, e));
+  };
+  var ec = [
+    "unexpected EOF",
+    "invalid block type",
+    "invalid length/literal",
+    "invalid distance",
+    "stream finished",
+    "no stream handler",
+    ,
+    // determined by compression function
+    "no callback",
+    "invalid UTF-8 data",
+    "extra field too long",
+    "date not in range 1980-2099",
+    "filename too long",
+    "stream finishing",
+    "invalid zip data"
+    // determined by unknown compression method
+  ];
+  var err = function(ind, msg, nt) {
+    var e = new Error(msg || ec[ind]);
+    e.code = ind;
+    if (Error.captureStackTrace)
+      Error.captureStackTrace(e, err);
+    if (!nt)
+      throw e;
+    return e;
+  };
+  var wbits = function(d, p, v) {
+    v <<= p & 7;
+    var o = p / 8 | 0;
+    d[o] |= v;
+    d[o + 1] |= v >> 8;
+  };
+  var wbits16 = function(d, p, v) {
+    v <<= p & 7;
+    var o = p / 8 | 0;
+    d[o] |= v;
+    d[o + 1] |= v >> 8;
+    d[o + 2] |= v >> 16;
+  };
+  var hTree = function(d, mb) {
+    var t = [];
+    for (var i2 = 0; i2 < d.length; ++i2) {
+      if (d[i2])
+        t.push({ s: i2, f: d[i2] });
+    }
+    var s = t.length;
+    var t2 = t.slice();
+    if (!s)
+      return { t: et, l: 0 };
+    if (s == 1) {
+      var v = new u8(t[0].s + 1);
+      v[t[0].s] = 1;
+      return { t: v, l: 1 };
+    }
+    t.sort(function(a, b) {
+      return a.f - b.f;
+    });
+    t.push({ s: -1, f: 25001 });
+    var l = t[0], r = t[1], i0 = 0, i1 = 1, i22 = 2;
+    t[0] = { s: -1, f: l.f + r.f, l, r };
+    while (i1 != s - 1) {
+      l = t[t[i0].f < t[i22].f ? i0++ : i22++];
+      r = t[i0 != i1 && t[i0].f < t[i22].f ? i0++ : i22++];
+      t[i1++] = { s: -1, f: l.f + r.f, l, r };
+    }
+    var maxSym = t2[0].s;
+    for (var i2 = 1; i2 < s; ++i2) {
+      if (t2[i2].s > maxSym)
+        maxSym = t2[i2].s;
+    }
+    var tr = new u16(maxSym + 1);
+    var mbt = ln(t[i1 - 1], tr, 0);
+    if (mbt > mb) {
+      var i2 = 0, dt = 0;
+      var lft = mbt - mb, cst = 1 << lft;
+      t2.sort(function(a, b) {
+        return tr[b.s] - tr[a.s] || a.f - b.f;
+      });
+      for (; i2 < s; ++i2) {
+        var i2_1 = t2[i2].s;
+        if (tr[i2_1] > mb) {
+          dt += cst - (1 << mbt - tr[i2_1]);
+          tr[i2_1] = mb;
+        } else
+          break;
+      }
+      dt >>= lft;
+      while (dt > 0) {
+        var i2_2 = t2[i2].s;
+        if (tr[i2_2] < mb)
+          dt -= 1 << mb - tr[i2_2]++ - 1;
+        else
+          ++i2;
+      }
+      for (; i2 >= 0 && dt; --i2) {
+        var i2_3 = t2[i2].s;
+        if (tr[i2_3] == mb) {
+          --tr[i2_3];
+          ++dt;
+        }
+      }
+      mbt = mb;
+    }
+    return { t: new u8(tr), l: mbt };
+  };
+  var ln = function(n, l, d) {
+    return n.s == -1 ? Math.max(ln(n.l, l, d + 1), ln(n.r, l, d + 1)) : l[n.s] = d;
+  };
+  var lc = function(c) {
+    var s = c.length;
+    while (s && !c[--s])
+      ;
+    var cl = new u16(++s);
+    var cli = 0, cln = c[0], cls = 1;
+    var w = function(v) {
+      cl[cli++] = v;
+    };
+    for (var i2 = 1; i2 <= s; ++i2) {
+      if (c[i2] == cln && i2 != s)
+        ++cls;
+      else {
+        if (!cln && cls > 2) {
+          for (; cls > 138; cls -= 138)
+            w(32754);
+          if (cls > 2) {
+            w(cls > 10 ? cls - 11 << 5 | 28690 : cls - 3 << 5 | 12305);
+            cls = 0;
+          }
+        } else if (cls > 3) {
+          w(cln), --cls;
+          for (; cls > 6; cls -= 6)
+            w(8304);
+          if (cls > 2)
+            w(cls - 3 << 5 | 8208), cls = 0;
+        }
+        while (cls--)
+          w(cln);
+        cls = 1;
+        cln = c[i2];
+      }
+    }
+    return { c: cl.subarray(0, cli), n: s };
+  };
+  var clen = function(cf, cl) {
+    var l = 0;
+    for (var i2 = 0; i2 < cl.length; ++i2)
+      l += cf[i2] * cl[i2];
+    return l;
+  };
+  var wfblk = function(out, pos, dat) {
+    var s = dat.length;
+    var o = shft(pos + 2);
+    out[o] = s & 255;
+    out[o + 1] = s >> 8;
+    out[o + 2] = out[o] ^ 255;
+    out[o + 3] = out[o + 1] ^ 255;
+    for (var i2 = 0; i2 < s; ++i2)
+      out[o + i2 + 4] = dat[i2];
+    return (o + 4 + s) * 8;
+  };
+  var wblk = function(dat, out, final, syms, lf, df, eb, li, bs, bl, p) {
+    wbits(out, p++, final);
+    ++lf[256];
+    var _a2 = hTree(lf, 15), dlt = _a2.t, mlb = _a2.l;
+    var _b2 = hTree(df, 15), ddt = _b2.t, mdb = _b2.l;
+    var _c = lc(dlt), lclt = _c.c, nlc = _c.n;
+    var _d = lc(ddt), lcdt = _d.c, ndc = _d.n;
+    var lcfreq = new u16(19);
+    for (var i2 = 0; i2 < lclt.length; ++i2)
+      ++lcfreq[lclt[i2] & 31];
+    for (var i2 = 0; i2 < lcdt.length; ++i2)
+      ++lcfreq[lcdt[i2] & 31];
+    var _e = hTree(lcfreq, 7), lct = _e.t, mlcb = _e.l;
+    var nlcc = 19;
+    for (; nlcc > 4 && !lct[clim[nlcc - 1]]; --nlcc)
+      ;
+    var flen = bl + 5 << 3;
+    var ftlen = clen(lf, flt) + clen(df, fdt) + eb;
+    var dtlen = clen(lf, dlt) + clen(df, ddt) + eb + 14 + 3 * nlcc + clen(lcfreq, lct) + 2 * lcfreq[16] + 3 * lcfreq[17] + 7 * lcfreq[18];
+    if (bs >= 0 && flen <= ftlen && flen <= dtlen)
+      return wfblk(out, p, dat.subarray(bs, bs + bl));
+    var lm, ll, dm, dl;
+    wbits(out, p, 1 + (dtlen < ftlen)), p += 2;
+    if (dtlen < ftlen) {
+      lm = hMap(dlt, mlb, 0), ll = dlt, dm = hMap(ddt, mdb, 0), dl = ddt;
+      var llm = hMap(lct, mlcb, 0);
+      wbits(out, p, nlc - 257);
+      wbits(out, p + 5, ndc - 1);
+      wbits(out, p + 10, nlcc - 4);
+      p += 14;
+      for (var i2 = 0; i2 < nlcc; ++i2)
+        wbits(out, p + 3 * i2, lct[clim[i2]]);
+      p += 3 * nlcc;
+      var lcts = [lclt, lcdt];
+      for (var it = 0; it < 2; ++it) {
+        var clct = lcts[it];
+        for (var i2 = 0; i2 < clct.length; ++i2) {
+          var len = clct[i2] & 31;
+          wbits(out, p, llm[len]), p += lct[len];
+          if (len > 15)
+            wbits(out, p, clct[i2] >> 5 & 127), p += clct[i2] >> 12;
+        }
+      }
+    } else {
+      lm = flm, ll = flt, dm = fdm, dl = fdt;
+    }
+    for (var i2 = 0; i2 < li; ++i2) {
+      var sym = syms[i2];
+      if (sym > 255) {
+        var len = sym >> 18 & 31;
+        wbits16(out, p, lm[len + 257]), p += ll[len + 257];
+        if (len > 7)
+          wbits(out, p, sym >> 23 & 31), p += fleb[len];
+        var dst = sym & 31;
+        wbits16(out, p, dm[dst]), p += dl[dst];
+        if (dst > 3)
+          wbits16(out, p, sym >> 5 & 8191), p += fdeb[dst];
+      } else {
+        wbits16(out, p, lm[sym]), p += ll[sym];
+      }
+    }
+    wbits16(out, p, lm[256]);
+    return p + ll[256];
+  };
+  var deo = /* @__PURE__ */ new i32([65540, 131080, 131088, 131104, 262176, 1048704, 1048832, 2114560, 2117632]);
+  var et = /* @__PURE__ */ new u8(0);
+  var dflt = function(dat, lvl, plvl, pre, post, st) {
+    var s = st.z || dat.length;
+    var o = new u8(pre + s + 5 * (1 + Math.ceil(s / 7e3)) + post);
+    var w = o.subarray(pre, o.length - post);
+    var lst = st.l;
+    var pos = (st.r || 0) & 7;
+    if (lvl) {
+      if (pos)
+        w[0] = st.r >> 3;
+      var opt = deo[lvl - 1];
+      var n = opt >> 13, c = opt & 8191;
+      var msk_1 = (1 << plvl) - 1;
+      var prev = st.p || new u16(32768), head = st.h || new u16(msk_1 + 1);
+      var bs1_1 = Math.ceil(plvl / 3), bs2_1 = 2 * bs1_1;
+      var hsh = function(i3) {
+        return (dat[i3] ^ dat[i3 + 1] << bs1_1 ^ dat[i3 + 2] << bs2_1) & msk_1;
+      };
+      var syms = new i32(25e3);
+      var lf = new u16(288), df = new u16(32);
+      var lc_1 = 0, eb = 0, i2 = st.i || 0, li = 0, wi = st.w || 0, bs = 0;
+      for (; i2 + 2 < s; ++i2) {
+        var hv = hsh(i2);
+        var imod = i2 & 32767, pimod = head[hv];
+        prev[imod] = pimod;
+        head[hv] = imod;
+        if (wi <= i2) {
+          var rem = s - i2;
+          if ((lc_1 > 7e3 || li > 24576) && (rem > 423 || !lst)) {
+            pos = wblk(dat, w, 0, syms, lf, df, eb, li, bs, i2 - bs, pos);
+            li = lc_1 = eb = 0, bs = i2;
+            for (var j = 0; j < 286; ++j)
+              lf[j] = 0;
+            for (var j = 0; j < 30; ++j)
+              df[j] = 0;
+          }
+          var l = 2, d = 0, ch_1 = c, dif = imod - pimod & 32767;
+          if (rem > 2 && hv == hsh(i2 - dif)) {
+            var maxn = Math.min(n, rem) - 1;
+            var maxd = Math.min(32767, i2);
+            var ml = Math.min(258, rem);
+            while (dif <= maxd && --ch_1 && imod != pimod) {
+              if (dat[i2 + l] == dat[i2 + l - dif]) {
+                var nl = 0;
+                for (; nl < ml && dat[i2 + nl] == dat[i2 + nl - dif]; ++nl)
+                  ;
+                if (nl > l) {
+                  l = nl, d = dif;
+                  if (nl > maxn)
+                    break;
+                  var mmd = Math.min(dif, nl - 2);
+                  var md = 0;
+                  for (var j = 0; j < mmd; ++j) {
+                    var ti = i2 - dif + j & 32767;
+                    var pti = prev[ti];
+                    var cd = ti - pti & 32767;
+                    if (cd > md)
+                      md = cd, pimod = ti;
+                  }
+                }
+              }
+              imod = pimod, pimod = prev[imod];
+              dif += imod - pimod & 32767;
+            }
+          }
+          if (d) {
+            syms[li++] = 268435456 | revfl[l] << 18 | revfd[d];
+            var lin = revfl[l] & 31, din = revfd[d] & 31;
+            eb += fleb[lin] + fdeb[din];
+            ++lf[257 + lin];
+            ++df[din];
+            wi = i2 + l;
+            ++lc_1;
+          } else {
+            syms[li++] = dat[i2];
+            ++lf[dat[i2]];
+          }
+        }
+      }
+      for (i2 = Math.max(i2, wi); i2 < s; ++i2) {
+        syms[li++] = dat[i2];
+        ++lf[dat[i2]];
+      }
+      pos = wblk(dat, w, lst, syms, lf, df, eb, li, bs, i2 - bs, pos);
+      if (!lst) {
+        st.r = pos & 7 | w[pos / 8 | 0] << 3;
+        pos -= 7;
+        st.h = head, st.p = prev, st.i = i2, st.w = wi;
+      }
+    } else {
+      for (var i2 = st.w || 0; i2 < s + lst; i2 += 65535) {
+        var e = i2 + 65535;
+        if (e >= s) {
+          w[pos / 8 | 0] = lst;
+          e = s;
+        }
+        pos = wfblk(w, pos + 1, dat.subarray(i2, e));
+      }
+      st.i = s;
+    }
+    return slc(o, 0, pre + shft(pos) + post);
+  };
+  var crct = /* @__PURE__ */ (function() {
+    var t = new Int32Array(256);
+    for (var i2 = 0; i2 < 256; ++i2) {
+      var c = i2, k = 9;
+      while (--k)
+        c = (c & 1 && -306674912) ^ c >>> 1;
+      t[i2] = c;
+    }
+    return t;
+  })();
+  var crc = function() {
+    var c = -1;
+    return {
+      p: function(d) {
+        var cr = c;
+        for (var i2 = 0; i2 < d.length; ++i2)
+          cr = crct[cr & 255 ^ d[i2]] ^ cr >>> 8;
+        c = cr;
+      },
+      d: function() {
+        return ~c;
+      }
+    };
+  };
+  var dopt = function(dat, opt, pre, post, st) {
+    if (!st) {
+      st = { l: 1 };
+      if (opt.dictionary) {
+        var dict = opt.dictionary.subarray(-32768);
+        var newDat = new u8(dict.length + dat.length);
+        newDat.set(dict);
+        newDat.set(dat, dict.length);
+        dat = newDat;
+        st.w = dict.length;
+      }
+    }
+    return dflt(dat, opt.level == null ? 6 : opt.level, opt.mem == null ? st.l ? Math.ceil(Math.max(8, Math.min(13, Math.log(dat.length))) * 1.5) : 20 : 12 + opt.mem, pre, post, st);
+  };
+  var mrg = function(a, b) {
+    var o = {};
+    for (var k in a)
+      o[k] = a[k];
+    for (var k in b)
+      o[k] = b[k];
+    return o;
+  };
+  var wbytes = function(d, b, v) {
+    for (; v; ++b)
+      d[b] = v, v >>>= 8;
+  };
+  function deflateSync(data, opts) {
+    return dopt(data, opts || {}, 0, 0);
+  }
+  var fltn = function(d, p, t, o) {
+    for (var k in d) {
+      var val = d[k], n = p + k, op = o;
+      if (Array.isArray(val))
+        op = mrg(o, val[1]), val = val[0];
+      if (ArrayBuffer.isView(val))
+        t[n] = [val, op];
+      else {
+        t[n += "/"] = [new u8(0), op];
+        fltn(val, n, t, o);
+      }
+    }
+  };
+  var te = typeof TextEncoder != "undefined" && /* @__PURE__ */ new TextEncoder();
+  var td = typeof TextDecoder != "undefined" && /* @__PURE__ */ new TextDecoder();
+  var tds = 0;
+  try {
+    td.decode(et, { stream: true });
+    tds = 1;
+  } catch (e) {
+  }
+  function strToU8(str, latin1) {
+    if (latin1) {
+      var ar_1 = new u8(str.length);
+      for (var i2 = 0; i2 < str.length; ++i2)
+        ar_1[i2] = str.charCodeAt(i2);
+      return ar_1;
+    }
+    if (te)
+      return te.encode(str);
+    var l = str.length;
+    var ar = new u8(str.length + (str.length >> 1));
+    var ai = 0;
+    var w = function(v) {
+      ar[ai++] = v;
+    };
+    for (var i2 = 0; i2 < l; ++i2) {
+      if (ai + 5 > ar.length) {
+        var n = new u8(ai + 8 + (l - i2 << 1));
+        n.set(ar);
+        ar = n;
+      }
+      var c = str.charCodeAt(i2);
+      if (c < 128 || latin1)
+        w(c);
+      else if (c < 2048)
+        w(192 | c >> 6), w(128 | c & 63);
+      else if (c > 55295 && c < 57344)
+        c = 65536 + (c & 1023 << 10) | str.charCodeAt(++i2) & 1023, w(240 | c >> 18), w(128 | c >> 12 & 63), w(128 | c >> 6 & 63), w(128 | c & 63);
+      else
+        w(224 | c >> 12), w(128 | c >> 6 & 63), w(128 | c & 63);
+    }
+    return slc(ar, 0, ai);
+  }
+  var exfl = function(ex) {
+    var le = 0;
+    if (ex) {
+      for (var k in ex) {
+        var l = ex[k].length;
+        if (l > 65535)
+          err(9);
+        le += l + 4;
+      }
+    }
+    return le;
+  };
+  var wzh = function(d, b, f, fn, u, c, ce, co) {
+    var fl2 = fn.length, ex = f.extra, col = co && co.length;
+    var exl = exfl(ex);
+    wbytes(d, b, ce != null ? 33639248 : 67324752), b += 4;
+    if (ce != null)
+      d[b++] = 20, d[b++] = f.os;
+    d[b] = 20, b += 2;
+    d[b++] = f.flag << 1 | (c < 0 && 8), d[b++] = u && 8;
+    d[b++] = f.compression & 255, d[b++] = f.compression >> 8;
+    var dt = new Date(f.mtime == null ? Date.now() : f.mtime), y = dt.getFullYear() - 1980;
+    if (y < 0 || y > 119)
+      err(10);
+    wbytes(d, b, y << 25 | dt.getMonth() + 1 << 21 | dt.getDate() << 16 | dt.getHours() << 11 | dt.getMinutes() << 5 | dt.getSeconds() >> 1), b += 4;
+    if (c != -1) {
+      wbytes(d, b, f.crc);
+      wbytes(d, b + 4, c < 0 ? -c - 2 : c);
+      wbytes(d, b + 8, f.size);
+    }
+    wbytes(d, b + 12, fl2);
+    wbytes(d, b + 14, exl), b += 16;
+    if (ce != null) {
+      wbytes(d, b, col);
+      wbytes(d, b + 6, f.attrs);
+      wbytes(d, b + 10, ce), b += 14;
+    }
+    d.set(fn, b);
+    b += fl2;
+    if (exl) {
+      for (var k in ex) {
+        var exf = ex[k], l = exf.length;
+        wbytes(d, b, +k);
+        wbytes(d, b + 2, l);
+        d.set(exf, b + 4), b += 4 + l;
+      }
+    }
+    if (col)
+      d.set(co, b), b += col;
+    return b;
+  };
+  var wzf = function(o, b, c, d, e) {
+    wbytes(o, b, 101010256);
+    wbytes(o, b + 8, c);
+    wbytes(o, b + 10, c);
+    wbytes(o, b + 12, d);
+    wbytes(o, b + 16, e);
+  };
+  function zipSync(data, opts) {
+    if (!opts)
+      opts = {};
+    var r = {};
+    var files = [];
+    fltn(data, "", r, opts);
+    var o = 0;
+    var tot = 0;
+    for (var fn in r) {
+      var _a2 = r[fn], file = _a2[0], p = _a2[1];
+      var compression = p.level == 0 ? 0 : 8;
+      var f = strToU8(fn), s = f.length;
+      var com = p.comment, m = com && strToU8(com), ms = m && m.length;
+      var exl = exfl(p.extra);
+      if (s > 65535)
+        err(11);
+      var d = compression ? deflateSync(file, p) : file, l = d.length;
+      var c = crc();
+      c.p(file);
+      files.push(mrg(p, {
+        size: file.length,
+        crc: c.d(),
+        c: d,
+        f,
+        m,
+        u: s != fn.length || m && com.length != ms,
+        o,
+        compression
+      }));
+      o += 30 + s + exl + l;
+      tot += 76 + 2 * (s + exl) + (ms || 0) + l;
+    }
+    var out = new u8(tot + 22), oe = o, cdl = tot - o;
+    for (var i2 = 0; i2 < files.length; ++i2) {
+      var f = files[i2];
+      wzh(out, f.o, f, f.f, f.u, f.c.length);
+      var badd = 30 + f.f.length + exfl(f.extra);
+      out.set(f.c, f.o + badd);
+      wzh(out, o, f, f.f, f.u, f.c.length, f.o, f.m), o += 16 + badd + (f.m ? f.m.length : 0);
+    }
+    wzf(out, o, files.length, cdl, oe);
+    return out;
+  }
+
+  // src/civitai/live-files.ts
+  var ordinaryLimit = 50 * MIB;
+  var savedImageTypes = /* @__PURE__ */ new Set(["jpg", "jpeg", "png", "webp"]);
+  var utf82 = new TextDecoder("utf-8", { fatal: true });
+  var liveFileAccept = ".txt,.csv,.json,.jpg,.jpeg,.png,.webp,.zip,.glb,.fbx";
+  function fileExtension(name) {
+    const period = name.lastIndexOf(".");
+    return period > 0 ? name.slice(period + 1).toLowerCase() : "";
+  }
+  function requirePlainName(name) {
+    if (!name || name.length > 200 || /[/\\\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/.test(name)) {
+      throw new Error("Choose a file with a plain filename.");
+    }
+  }
+  function plainText(data) {
+    if (data.includes(0)) throw new Error("This file contains binary data.");
+    return utf82.decode(data);
+  }
+  function requireSaveCandidate(name, size) {
+    requirePlainName(name);
+    const extension = fileExtension(name);
+    const cap = extension === "zip" ? SAVE_ZIP_MAX_BYTES : extension === "glb" || extension === "fbx" ? SAVE_MODEL3D_MAX_BYTES : savedImageTypes.has(extension) || extension === "txt" || extension === "json" ? ordinaryLimit : 0;
+    if (!cap) throw new Error("Choose a supported image, JSON, text, 3D model, or allowed ZIP.");
+    if (!Number.isSafeInteger(size) || size < 1 || size > cap) throw new Error(`This file must be between 1 byte and ${cap / MIB} MiB.`);
+  }
+  function validateArchive(bytes) {
+    const result = validateSaveZip(bytes);
+    if (!result.ok) throw new Error(result.error);
+    return result;
+  }
+  function archivePreview(bytes, entryCount) {
+    const view = new DataView(bytes);
+    let cursor = view.getUint32(bytes.byteLength - 22 + 16, true);
+    const entries = [];
+    for (let index = 0; index < Math.min(entryCount, MAX_FILES); index++) {
+      const size = view.getUint32(cursor + 24, true);
+      const nameBytes = view.getUint16(cursor + 28, true);
+      const extraBytes = view.getUint16(cursor + 30, true);
+      const commentBytes = view.getUint16(cursor + 32, true);
+      const name = utf82.decode(new Uint8Array(bytes, cursor + 46, nameBytes));
+      entries.push({ name: name.length > 180 ? name.slice(0, 177) + "\u2026" : name, size });
+      cursor += 46 + nameBytes + extraBytes + commentBytes;
+    }
+    return { entryCount, entries };
+  }
+  function previewLiveArchive(name, bytes) {
+    if (fileExtension(name) !== "zip") return void 0;
+    requireSaveCandidate(name, bytes.byteLength);
+    return archivePreview(bytes, validateArchive(bytes).entryCount);
+  }
+  async function inspectSaveBytes(name, bytes, signal) {
+    requireSaveCandidate(name, bytes.byteLength);
+    signal?.throwIfAborted();
+    const type = fileExtension(name);
+    const data = new Uint8Array(bytes);
+    if (type === "zip") {
+      const result = validateArchive(bytes);
+      const error = await verifySaveZipInflate(bytes, result.deflated, signal);
+      if (error) throw new Error(error);
+      return archivePreview(bytes, result.entryCount);
+    }
+    if (type === "glb" || type === "fbx") {
+      const kind = looksLikeSaveModel3d(data);
+      if (!kind || SAVE_MODEL3D_EXTENSION[kind] !== type || !isValidSaveModel3d(data, kind)) {
+        throw new Error("Civitai requires a valid binary GLB or FBX.");
+      }
+      return;
+    }
+    if (type === "json" || type === "txt") {
+      const text2 = plainText(data);
+      if (type === "json") JSON.parse(text2);
+      return;
+    }
+    const png = [137, 80, 78, 71, 13, 10, 26, 10].every((value, index) => data[index] === value);
+    const jpeg = data[0] === 255 && data[1] === 216 && data[2] === 255;
+    const webp = [82, 73, 70, 70].every((value, index) => data[index] === value) && [87, 69, 66, 80].every((value, index) => data[index + 8] === value);
+    if (type === "png" && png || (type === "jpg" || type === "jpeg") && jpeg || type === "webp" && webp) return;
+    throw new Error("The image bytes and filename disagree.");
+  }
+  async function prepareLiveSource(files) {
+    if (!files.length || files.length > MAX_FILES) throw new Error(`Select 1 to ${MAX_FILES} supported files.`);
+    const original = files[0];
+    if (files.length === 1 && fileExtension(original.name) !== "csv") {
+      requireSaveCandidate(original.name, original.size);
+      const bytes2 = await original.arrayBuffer();
+      const archive2 = await inspectSaveBytes(original.name, bytes2, AbortSignal.timeout(9e4));
+      return {
+        file: original,
+        info: { name: original.name, size: original.size, sha256: bytesToHex(sha256(new Uint8Array(bytes2))) },
+        archive: archive2
+      };
+    }
+    const names = /* @__PURE__ */ new Set();
+    const encoder3 = new TextEncoder();
+    let archiveSize = 22;
+    for (const file2 of files) {
+      requirePlainName(file2.name);
+      const extension = fileExtension(file2.name);
+      if (!SAVE_ZIP_ALLOWED_EXTENSIONS.has(extension)) throw new Error("A handoff ZIP cannot contain " + file2.name + ".");
+      const key = file2.name.normalize("NFC").toLowerCase();
+      if (names.has(key)) throw new Error("Rename duplicate filenames before building the ZIP.");
+      names.add(key);
+      archiveSize += 76 + 2 * encoder3.encode(file2.name).byteLength + file2.size;
+    }
+    if (archiveSize > SAVE_ZIP_MAX_BYTES) throw new Error("These files exceed the app\u2019s 256 MiB ZIP limit.");
+    const members = /* @__PURE__ */ Object.create(null);
+    for (const file2 of files) {
+      const buffer = await file2.arrayBuffer();
+      const extension = fileExtension(file2.name);
+      if (extension === "csv" || extension === "txt" && !buffer.byteLength) plainText(new Uint8Array(buffer));
+      else await inspectSaveBytes(file2.name, buffer);
+      members[file2.name] = new Uint8Array(buffer);
+    }
+    const bytes = zipSync(members, { level: 0, mtime: new Date(1980, 0, 1) });
+    const name = "civitai-safe-handoff.zip";
+    const archive = await inspectSaveBytes(name, bytes.buffer, AbortSignal.timeout(9e4));
+    const file = new File([bytes], name, { type: "application/zip" });
+    return { file, info: { name, size: bytes.byteLength, sha256: bytesToHex(sha256(bytes)) }, archive };
+  }
+  async function verifyLiveFile(file, expected, signal) {
+    signal?.throwIfAborted();
+    if (file.size !== expected.size) return false;
+    const hash = sha256.create();
+    const reader = file.stream().getReader();
+    const cancel = () => {
+      void reader.cancel().catch(() => void 0);
+    };
+    signal?.addEventListener("abort", cancel, { once: true });
+    try {
+      for (; ; ) {
+        const next = await reader.read();
+        signal?.throwIfAborted();
+        if (next.done) return bytesToHex(hash.digest()) === expected.sha256;
+        hash.update(next.value);
+      }
+    } finally {
+      signal?.removeEventListener("abort", cancel);
+      reader.releaseLock();
+      hash.destroy();
+    }
+  }
+
+  // src/civitai/live-signaling.ts
+  var encoder = new TextEncoder();
+  var decoder2 = new TextDecoder("utf-8", { fatal: true });
+  var prefix = "SAFE1.";
+  var pickupHashPrefix = "#pickup=";
+  var maximumSdp = 16 * 1024;
+  var maximumExpandedCode = 32 * 1024;
+  var maximumCode = 16 * 1024;
+  var uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  var sha2562 = /^[0-9a-f]{64}$/;
+  var pickupWindowMs = 24 * 60 * 60 * 1e3;
+  var chatCodeLine = 1800;
+  var chatMessageLimit = 2e3;
+  var liveDataLabel = "civitai-safe-1";
+  function validResume(value) {
+    if (!value || typeof value !== "object") return false;
+    const { offset, sha256: digest2 } = value;
+    return typeof offset === "number" && Number.isSafeInteger(offset) && offset > 0 && typeof digest2 === "string" && sha2562.test(digest2);
+  }
+  function createLivePeer() {
+    return new RTCPeerConnection({ iceServers: [] });
+  }
+  function directSdp(value) {
+    if (typeof value !== "string" || value.length > maximumSdp) return false;
+    const lines = value.split(/\r?\n/);
+    const media = lines.filter((line) => line.startsWith("m="));
+    const candidates = lines.filter((line) => line.startsWith("a=candidate:"));
+    return media.length === 1 && /^m=application \d+ UDP\/DTLS\/SCTP webrtc-datachannel$/.test(media[0]) && candidates.length > 0 && candidates.every((line) => / typ host(?: |$)/.test(line));
+  }
+  async function encode(value) {
+    const gzip = new Blob([JSON.stringify(value)]).stream().pipeThrough(new CompressionStream("gzip"));
+    const output2 = prefix + encodeBytes(new Uint8Array(await new Response(gzip).arrayBuffer()));
+    if (output2.length > maximumCode) throw new Error("The browser produced a pickup code that is too long.");
+    return output2;
+  }
+  async function decode(code) {
+    if (code.length > maximumCode + Math.ceil(maximumCode / chatCodeLine) * 2) throw new Error("The pickup code is too long.");
+    const value = code.replace(/\s/g, "");
+    if (!value.startsWith(prefix) || value.length > maximumCode) throw new Error("Paste a Civitai SAFE pickup code.");
+    const gzip = new Blob([decodeBytes(value.slice(prefix.length))]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const input = gzip.getReader();
+    let result = "";
+    let size = 0;
+    try {
+      for (; ; ) {
+        const next = await input.read();
+        if (next.done) break;
+        size += next.value.byteLength;
+        if (size > maximumExpandedCode) throw new Error("The pickup code expands beyond its limit.");
+        result += decoder2.decode(next.value, { stream: true });
+      }
+      result += decoder2.decode();
+    } finally {
+      await input.cancel().catch(() => void 0);
+      input.releaseLock();
+    }
+    const packet = JSON.parse(result);
+    if (!packet || typeof packet.id !== "string" || !uuid.test(packet.id) || !directSdp(packet.sdp)) {
+      throw new Error("The pickup code has no supported direct data connection.");
+    }
+    if (packet.type === "offer" && typeof packet.secret === "string" && packet.secret.length === 43 && Number.isSafeInteger(packet.expiresAt) && packet.expiresAt > 0 && (packet.transferId === void 0 || typeof packet.transferId === "string" && uuid.test(packet.transferId))) {
+      decodeBytes(packet.secret, 32);
+      return packet;
+    }
+    if (packet.type === "answer" && typeof packet.proof === "string" && packet.proof.length === 43 && (packet.resume === void 0 || validResume(packet.resume))) {
+      decodeBytes(packet.proof, 32);
+      return packet;
+    }
+    throw new Error("The pickup code is incomplete.");
+  }
+  async function gatheredSdp(peer) {
+    if (peer.iceGatheringState !== "complete") {
+      await new Promise((resolve, reject) => {
+        const signal = AbortSignal.timeout(12e3);
+        const finished = () => {
+          if (peer.iceGatheringState === "complete") resolve();
+        };
+        peer.addEventListener("icegatheringstatechange", finished, { signal });
+        signal.addEventListener("abort", () => reject(new Error("The browser could not find a direct network path.")), { once: true });
+        finished();
+      });
+    }
+    const sdp = peer.localDescription?.sdp;
+    if (!directSdp(sdp)) throw new Error("This browser did not offer a compatible local network connection.");
+    return sdp;
+  }
+  async function answerKey(offer) {
+    return crypto.subtle.importKey("raw", decodeBytes(offer.secret, 32), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+  }
+  function answerProofInput(offer, sdp, resume) {
+    const common = [offer.id, offer.expiresAt, offer.sdp, sdp];
+    return encoder.encode(JSON.stringify(resume ? ["civitai-safe:answer:2", ...common, offer.transferId, resume.offset, resume.sha256] : ["civitai-safe:answer:1", ...common]));
+  }
+  async function createLiveOffer(peer, expiresAt, transferId) {
+    await peer.setLocalDescription(await peer.createOffer());
+    const offer = {
+      type: "offer",
+      id: crypto.randomUUID(),
+      expiresAt,
+      secret: encodeBytes(randomSecret()),
+      sdp: await gatheredSdp(peer),
+      transferId
+    };
+    return { offer, code: await encode(offer) };
+  }
+  async function readLiveOffer(code) {
+    const packet = await decode(code);
+    if (packet.type !== "offer") throw new Error("Paste the sender\u2019s pickup offer.");
+    return packet;
+  }
+  async function createLiveAnswer(peer, offer, resume) {
+    if (resume && (!offer.transferId || !validResume(resume))) throw new Error("This pickup does not support that resume point.");
+    await peer.setRemoteDescription({ type: "offer", sdp: offer.sdp });
+    await peer.setLocalDescription(await peer.createAnswer());
+    const sdp = await gatheredSdp(peer);
+    const mac = await crypto.subtle.sign("HMAC", await answerKey(offer), answerProofInput(offer, sdp, resume));
+    return encode({ type: "answer", id: offer.id, proof: encodeBytes(new Uint8Array(mac)), sdp, resume });
+  }
+  async function readLiveAnswer(invite, code) {
+    const answer = await decode(code);
+    if (answer.type !== "answer" || answer.id !== invite.id || answer.resume && !invite.transferId || !await crypto.subtle.verify(
+      "HMAC",
+      await answerKey(invite),
+      decodeBytes(answer.proof, 32),
+      answerProofInput(invite, answer.sdp, answer.resume)
+    )) throw new Error("This reply belongs to a different pickup offer.");
+    return answer;
+  }
+  function chatCode(code) {
+    return code.match(new RegExp(`.{1,${chatCodeLine}}`, "g"))?.join("\n") ?? "";
+  }
+  function pickupHash(code) {
+    return pickupHashPrefix + code;
+  }
+  function pickupFromHash(hash) {
+    if (typeof hash !== "string" || !hash.startsWith(pickupHashPrefix)) return void 0;
+    const code = hash.slice(pickupHashPrefix.length);
+    return code.length <= maximumCode && /^SAFE1\.[A-Za-z0-9_-]+$/.test(code) ? code : void 0;
+  }
+
+  // src/civitai/dropoff-request.ts
+  var requestPrefix = "#dropoff=";
+  var requestHashPattern = /^#dropoff=(\d{13})\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\.([A-Za-z0-9_-]{1,960}))?$/;
+  var clockToleranceMs = 2 * 60 * 1e3;
+  var maxChecklistBytes = 720;
+  var encoder2 = new TextEncoder();
+  var decoder3 = new TextDecoder("utf-8", { fatal: true });
+  function validChecklist(value) {
+    return Array.isArray(value) && value.length <= 8 && value.every((item) => typeof item === "string" && item.length > 0 && item.length <= 90 && item === item.trim() && !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069]/u.test(item));
+  }
+  function createDropoffRequest(checklist = "", now = Date.now()) {
+    const items = checklist.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    if (!validChecklist(items)) throw new Error("Use up to eight checklist items, with at most 90 characters per item.");
+    const bytes = encoder2.encode(JSON.stringify(items));
+    if (bytes.byteLength > maxChecklistBytes) throw new Error("Shorten the checklist to fit in one chat link.");
+    const expiresAt = now + pickupWindowMs;
+    const suffix = items.length ? "." + encodeBytes(bytes) : "";
+    return { expiresAt, hash: `${requestPrefix}${expiresAt}.${crypto.randomUUID()}${suffix}`, items };
+  }
+  function readDropoffRequest(hash, now = Date.now()) {
+    if (typeof hash !== "string" || !hash.startsWith(requestPrefix)) return void 0;
+    const match = requestHashPattern.exec(hash);
+    if (!match || Number(match[1]) > now + pickupWindowMs + clockToleranceMs) {
+      throw new Error("This drop-off request link is invalid.");
+    }
+    const expiresAt = Number(match[1]);
+    if (expiresAt <= now) throw new Error("This drop-off request expired.");
+    try {
+      const items = match[2] ? JSON.parse(decoder3.decode(decodeBytes(match[2]))) : [];
+      if (validChecklist(items)) return { expiresAt, hash, items };
+    } catch {
+    }
+    throw new Error("This drop-off request link is invalid.");
+  }
+
+  // src/civitai/live-pickup.ts
+  var chunkSize = 16 * 1024;
+  var maxQueued = 512 * 1024;
+  var moveSaveAt = 64 * MIB;
+  var shaPattern = /^[0-9a-f]{64}$/;
+  var senderExpired = "This handoff expired after 24 hours.";
+  var receiverExpired = "This pickup offer expired.";
+  var dropoffExpired = "This drop-off request expired.";
+  function timeRemaining(wall, elapsed) {
+    return Math.max(0, Math.min(wall - Date.now(), elapsed - performance.now()));
+  }
+  function part(tag, className = "", text2 = "") {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text2) node.textContent = text2;
+    return node;
+  }
+  function action(text2, kind = "") {
+    const button = part("button", ("button " + kind).trim(), text2);
+    button.type = "button";
+    return button;
+  }
+  function field(text2, control) {
+    const label = part("label", "field", text2);
+    label.append(control);
+    return label;
+  }
+  function report(output2, text2, isError = false) {
+    output2.textContent = text2;
+    output2.classList.toggle("error", isError);
+  }
+  function status() {
+    const output2 = part("p", "status");
+    output2.setAttribute("role", "status");
+    return output2;
+  }
+  function packagePreview(info, archive) {
+    const preview = part("div", "stack live-package");
+    preview.append(part("strong", "", info.name), part("p", "quiet muted", info.size.toLocaleString() + " bytes"));
+    if (archive) {
+      const details = part("details");
+      details.append(part("summary", "", archive.entryCount + (archive.entryCount === 1 ? " archive entry" : " archive entries")));
+      const entries = part("ul", "package-entries");
+      for (const entry of archive.entries) {
+        entries.append(part("li", "", entry.name + " \xB7 " + entry.size.toLocaleString() + " bytes"));
+      }
+      details.append(entries);
+      if (archive.entries.length < archive.entryCount) {
+        details.append(part("p", "quiet muted", "Showing the first " + archive.entries.length + " entries."));
+      }
+      preview.append(details);
+    }
+    return preview;
+  }
+  function readPacket(data) {
+    if (typeof data !== "string" || data.length > 2048) throw new Error("The pickup message is invalid.");
+    const value = JSON.parse(data);
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("The pickup message is invalid.");
+    return value;
+  }
+  function descriptor(message) {
+    const { name, size, sha256: digest2 } = message;
+    if (message.type !== "file" || typeof name !== "string" || typeof size !== "number" || typeof digest2 !== "string" || !shaPattern.test(digest2)) throw new Error("The sender did not provide a valid file description.");
+    requireSaveCandidate(name, size);
+    return { name, size, sha256: digest2 };
+  }
+  async function sendFile(channel, info, startOffset, useFile, progress) {
+    useFile();
+    channel.send(JSON.stringify({ type: "file", ...info, ...startOffset ? { offset: startOffset } : {} }));
+    let lastUpdate = startOffset;
+    for (let offset = startOffset; offset < info.size; offset += chunkSize) {
+      const deadline = performance.now() + 15e3;
+      while (channel.bufferedAmount > maxQueued) {
+        useFile();
+        if (channel.readyState !== "open" || performance.now() >= deadline) throw new Error("The direct connection stopped. Issue a fresh offer.");
+        await new Promise((resolve) => setTimeout(resolve, 8));
+      }
+      const chunk = await useFile().slice(offset, offset + chunkSize).arrayBuffer();
+      useFile();
+      channel.send(chunk);
+      const sent = offset + chunk.byteLength;
+      if (sent === info.size || sent - lastUpdate >= MIB) {
+        lastUpdate = sent;
+        progress(sent);
+      }
+    }
+    useFile();
+    channel.send(JSON.stringify({ type: "end" }));
+  }
+  function mountLivePickup(root, sendToHost) {
+    const source = root.querySelector("#live-source");
+    const recipients = root.querySelector("#live-recipients");
+    const start = root.querySelector("#live-start");
+    const senderStatus = root.querySelector("#live-sender-status");
+    const senderPreview = root.querySelector("#live-sender-preview");
+    const senderRows = root.querySelector("#live-sender-rows");
+    const senderForm = root.querySelector("#live-sender-form");
+    const senderTitle = root.querySelector("#send-title");
+    const recipientField = root.querySelector("#recipient-field");
+    const recipientHint = root.querySelector("#recipients-hint");
+    const requestedFiles = root.querySelector("#requested-files");
+    const requestedList = root.querySelector("#requested-file-list");
+    const cancelDropoff = root.querySelector("#cancel-dropoff");
+    const requestButton = root.querySelector("#create-dropoff");
+    const requestChecklist = root.querySelector("#dropoff-checklist");
+    const requestLink = root.querySelector("#dropoff-link");
+    const requestField = root.querySelector("#dropoff-link-field");
+    const requestStatus = root.querySelector("#dropoff-status");
+    const offerInput = root.querySelector("#live-offer");
+    const connect = root.querySelector("#live-accept");
+    const discardPartial = root.querySelector("#discard-partial");
+    const receiverStatus = root.querySelector("#live-receiver-status");
+    const receiverArea = root.querySelector("#live-receiver-area");
+    const receiverForm = root.querySelector("#live-receiver-form");
+    source.accept = liveFileAccept;
+    let owner;
+    let closeGuest;
+    let checkGuestDeadline;
+    let checkOfferDeadline;
+    let offerTimer;
+    let incomingDropoff;
+    let incomingTimer;
+    let issuedDropoff;
+    let issuedTimer;
+    let retained;
+    let retentionTimer;
+    let saveRequest;
+    let shareRequest;
+    let shareView;
+    let hostInitialized = false;
+    const supported = typeof RTCPeerConnection === "function" && typeof CompressionStream === "function" && Boolean(crypto.subtle);
+    function savedThroughHost(name, bytes, signal) {
+      return new Promise((resolve, reject) => {
+        if (saveRequest) {
+          reject(new Error("Wait for the current browser save."));
+          return;
+        }
+        const id = crypto.randomUUID();
+        const complete = (message) => {
+          if (saveRequest?.id !== id) return;
+          clearTimeout(saveRequest.timer);
+          saveRequest = void 0;
+          signal?.removeEventListener("abort", cancel);
+          if (message) reject(new Error(message));
+          else resolve();
+        };
+        const cancel = () => complete("The pickup has closed.");
+        saveRequest = { id, complete, timer: setTimeout(() => complete("Civitai did not start the file save."), 9e4) };
+        signal?.addEventListener("abort", cancel, { once: true });
+        if (signal?.aborted) {
+          cancel();
+          return;
+        }
+        try {
+          sendToHost({ type: "SAVE_IMAGE", payload: { requestId: id, filename: name, bytes } }, bytes.byteLength >= moveSaveAt ? [bytes] : void 0);
+        } catch {
+          complete("Civitai could not receive the file for saving.");
+        }
+      });
+    }
+    function clearOfferDeadline() {
+      clearTimeout(offerTimer);
+      checkOfferDeadline = void 0;
+    }
+    function clearPickupRoute() {
+      if (shareView) sendToHost({ type: "NAVIGATE", payload: { path: "/", scope: "app", target: "current", replace: true } });
+    }
+    function dropoffDeadline(request) {
+      return { ...request, elapsedDeadline: performance.now() + Math.min(pickupWindowMs, request.expiresAt - Date.now()) };
+    }
+    function setDropoff(request) {
+      clearTimeout(incomingTimer);
+      if (incomingDropoff !== request && (incomingDropoff || request)) source.value = "";
+      incomingDropoff = request;
+      recipientField.hidden = recipientHint.hidden = Boolean(request);
+      cancelDropoff.hidden = !request;
+      requestedList.replaceChildren(...(request?.items ?? []).map((item) => part("li", "", item)));
+      requestedFiles.hidden = !request?.items.length;
+      senderTitle.textContent = request ? "Drop off a file" : "Send files";
+      start.textContent = request ? "Prepare drop-off" : "Prepare handoff";
+      if (request) incomingTimer = setTimeout(checkDeadlines, Math.ceil(timeRemaining(request.expiresAt, request.elapsedDeadline)));
+    }
+    function clearIssuedRequest() {
+      clearTimeout(issuedTimer);
+      issuedDropoff = void 0;
+      requestLink.value = "";
+      requestField.hidden = true;
+    }
+    function loadRouteHash(hash) {
+      try {
+        const request = readDropoffRequest(hash);
+        if (!request) {
+          if (incomingDropoff && pickupFromHash(hash) && !start.disabled) setDropoff();
+          loadPickupHash(hash);
+          return;
+        }
+        if (!supported || owner?.file || start.disabled || incomingDropoff?.hash === request.hash) return;
+        setDropoff(dropoffDeadline(request));
+        report(senderStatus, "Choose a file, then return its pickup link in the private chat where you got this request.");
+        root.querySelector("#send")?.scrollIntoView({ block: "nearest" });
+      } catch (error) {
+        if (typeof hash !== "string" || !hash.startsWith("#dropoff=") || owner?.file || start.disabled) return;
+        setDropoff();
+        clearPickupRoute();
+        report(senderStatus, error instanceof Error ? error.message : "Could not open the drop-off request.", true);
+      }
+    }
+    function loadPickupHash(hash) {
+      const code = pickupFromHash(hash);
+      if (!supported || !code || code === offerInput.value) return;
+      clearOfferDeadline();
+      offerInput.value = code;
+      void readLiveOffer(code).then(({ expiresAt }) => {
+        if (offerInput.value !== code) return;
+        const elapsedDeadline = performance.now() + Math.min(pickupWindowMs, expiresAt - Date.now());
+        const check = () => {
+          if (timeRemaining(expiresAt, elapsedDeadline)) return;
+          if (offerInput.value === code) {
+            offerInput.value = "";
+            clearPickupRoute();
+            if (!closeGuest) report(receiverStatus, receiverExpired);
+          }
+          clearOfferDeadline();
+        };
+        checkOfferDeadline = check;
+        offerTimer = setTimeout(check, timeRemaining(expiresAt, elapsedDeadline));
+        check();
+        if (offerInput.value === code && !closeGuest) {
+          report(receiverStatus, "Pickup offer loaded. Create your reply to continue.");
+          root.querySelector("#pickup")?.scrollIntoView({ block: "nearest" });
+        }
+      }).catch(() => {
+        if (offerInput.value === code) {
+          offerInput.value = "";
+          clearPickupRoute();
+          if (!closeGuest) report(receiverStatus, "This pickup link is invalid. Ask the sender for a fresh offer.", true);
+        }
+      });
+    }
+    offerInput.addEventListener("input", clearOfferDeadline);
+    function sharePickup(hash, fallback = "Share the pickup offer code in private Civitai chat.") {
+      return new Promise((resolve, reject) => {
+        if (shareRequest) {
+          reject(new Error("Wait for Civitai to finish the current share."));
+          return;
+        }
+        const id = crypto.randomUUID();
+        const complete = (result) => {
+          if (shareRequest?.id !== id) return;
+          clearTimeout(shareRequest.timer);
+          shareRequest = void 0;
+          if (!result) reject(new Error(fallback));
+          else resolve(result);
+        };
+        shareRequest = { id, complete, timer: setTimeout(complete, 5e3) };
+        try {
+          sendToHost({ type: "SHARE_LINK", payload: { requestId: id, subPath: "", hash } });
+        } catch {
+          complete();
+        }
+      });
+    }
+    function ownShareUrl(url, view, hash) {
+      const address = new URL(url);
+      if (address.origin !== view.origin || address.username || address.password || address.search || address.hash !== hash || address.pathname !== view.path && address.pathname !== view.path + "/" || address.href.length > chatMessageLimit) {
+        throw new Error("Civitai did not return the requested app link.");
+      }
+      return address.href;
+    }
+    requestLink.onfocus = () => requestLink.select();
+    requestButton.onclick = () => {
+      const view = shareView;
+      if (!view || requestButton.disabled) return;
+      let request;
+      try {
+        request = dropoffDeadline(createDropoffRequest(requestChecklist.value));
+      } catch (error) {
+        report(requestStatus, error instanceof Error ? error.message : "Could not create a drop-off request.", true);
+        return;
+      }
+      clearIssuedRequest();
+      issuedDropoff = request;
+      issuedTimer = setTimeout(checkDeadlines, Math.ceil(timeRemaining(request.expiresAt, request.elapsedDeadline)));
+      requestLink.value = view.origin + view.path + request.hash;
+      requestField.hidden = false;
+      requestButton.disabled = true;
+      const shareAdvice = "Copy the request link into private Civitai chat. It expires in 24 hours.";
+      report(requestStatus, shareAdvice);
+      void sharePickup(request.hash, shareAdvice).then((result) => {
+        if (issuedDropoff !== request || !timeRemaining(request.expiresAt, request.elapsedDeadline)) return;
+        requestLink.value = ownShareUrl(result.url, view, request.hash);
+        if (result.copied) report(requestStatus, "Request link copied. Send it in private Civitai chat.");
+      }).catch(() => {
+        if (issuedDropoff === request) report(requestStatus, shareAdvice);
+      }).finally(() => {
+        requestButton.disabled = false;
+      });
+    };
+    cancelDropoff.onclick = () => {
+      setDropoff();
+      clearPickupRoute();
+      report(senderStatus, "");
+    };
+    function endHandoff(current, text2) {
+      if (!current.file) return;
+      current.file = void 0;
+      clearTimeout(current.timer);
+      for (const invite of current.recipients) {
+        if (invite.savedAt === void 0 && !invite.revoked) invite.close(false, text2 === current.expiryMessage ? "expired" : "closed");
+      }
+      current.end.disabled = true;
+      current.end.hidden = true;
+      current.end.onclick = null;
+      owner = void 0;
+      senderForm.hidden = false;
+      start.disabled = false;
+      report(senderStatus, text2);
+    }
+    function requireSource(current) {
+      if (current.file && !timeRemaining(current.expiresAt, current.elapsedDeadline)) {
+        endHandoff(current, current.expiryMessage);
+      }
+      if (!current.file) throw new Error("This handoff is closed.");
+      return current.file;
+    }
+    function saveReceiptDocument(button, feedback2, filename, document2) {
+      if (button.disabled) return;
+      button.disabled = true;
+      report(feedback2, "");
+      const bytes = new TextEncoder().encode(JSON.stringify(document2, null, 2) + "\n");
+      void savedThroughHost(filename, bytes.buffer).then(() => report(feedback2, "Receipt download started.")).catch((error) => report(feedback2, error instanceof Error ? error.message : "Could not save the receipts.", true)).finally(() => {
+        button.disabled = false;
+      });
+    }
+    function updateSenderProgress(current) {
+      const required = current.recipients.filter((item) => !item.revoked);
+      const verified = required.filter((item) => item.savedAt !== void 0).length;
+      current.receipts.hidden = !verified;
+      if (!required.length) endHandoff(current, "Every pickup was revoked. This handoff is closed.");
+      else if (verified === required.length) {
+        const subject = required.length === current.recipients.length ? "All recipients" : "All remaining recipients";
+        endHandoff(current, subject + " verified their saves. This handoff is closed.");
+      } else report(senderStatus, `${verified} of ${required.length} verified \xB7 Expires ${new Date(current.expiresAt).toLocaleString()}`);
+    }
+    function invitationRow(current, label, showLink = false) {
+      const row = part("article", "row");
+      const prepare = action("Create pickup offer", "primary");
+      const revoke = action("Revoke pickup");
+      revoke.setAttribute("aria-label", "Revoke pickup for " + label);
+      const saveReceipt = action("Save receipt");
+      saveReceipt.setAttribute("aria-label", "Save receipt for " + label);
+      saveReceipt.hidden = true;
+      const receiptStatus = status();
+      const receiptFilename = "civitai-safe-pickup-receipt-" + (current.recipients.length + 1) + ".json";
+      const offer = part("textarea");
+      offer.readOnly = true;
+      offer.rows = 2;
+      offer.onfocus = () => offer.select();
+      const offerField = field("Pickup offer for " + label, offer);
+      offerField.classList.add("hidden");
+      const share = action("Copy pickup link");
+      share.classList.add("hidden");
+      const link = part("input");
+      link.readOnly = true;
+      link.onfocus = () => link.select();
+      const linkField = field("Pickup link for " + label, link);
+      linkField.classList.add("hidden");
+      const answer = part("textarea");
+      answer.rows = 2;
+      const answerField = field("Pickup reply from " + label, answer);
+      answerField.classList.add("hidden");
+      const accept = action("Connect recipient");
+      accept.disabled = accept.hidden = true;
+      const feedback2 = status();
+      row.append(part("h3", "", label), feedback2, prepare, share, linkField, offerField, answerField, accept, revoke, saveReceipt, receiptStatus);
+      senderRows.append(row);
+      const transferId = crypto.randomUUID();
+      let peer;
+      let activeChannel;
+      let closeTimer;
+      const clearShare = () => {
+        share.classList.add("hidden");
+        share.onclick = null;
+        link.value = "";
+        linkField.classList.add("hidden");
+      };
+      const invitation = {
+        label,
+        close(keepPeer = false, reason) {
+          if (!keepPeer) {
+            clearTimeout(closeTimer);
+            const ending = peer;
+            peer = void 0;
+            if (reason && activeChannel?.readyState === "open") {
+              try {
+                activeChannel.send(JSON.stringify({ type: "pickup-closed", reason }));
+                activeChannel.close();
+                closeTimer = setTimeout(() => ending?.close(), 1500);
+              } catch {
+                ending?.close();
+              }
+            } else ending?.close();
+          }
+          activeChannel = void 0;
+          offer.value = answer.value = "";
+          offerField.classList.add("hidden");
+          answerField.classList.add("hidden");
+          clearShare();
+          accept.onclick = prepare.onclick = revoke.onclick = null;
+          accept.disabled = prepare.disabled = revoke.disabled = true;
+          prepare.hidden = accept.hidden = revoke.hidden = true;
+          saveReceipt.hidden = invitation.savedAt === void 0;
+          if (invitation.savedAt === void 0) report(feedback2, invitation.revoked ? "Pickup revoked." : "Pickup closed.");
+        }
+      };
+      revoke.onclick = () => {
+        try {
+          requireSource(current);
+        } catch {
+          return;
+        }
+        if (invitation.revoked || invitation.savedAt !== void 0) return;
+        invitation.revoked = true;
+        invitation.close(false, "revoked");
+        updateSenderProgress(current);
+      };
+      saveReceipt.onclick = () => {
+        if (invitation.savedAt === void 0 || saveReceipt.disabled) return;
+        const receipt = {
+          type: "civitai-safe.pickup-receipt",
+          version: 1,
+          recipientLabel: invitation.label,
+          verifiedAt: new Date(invitation.savedAt).toISOString(),
+          verification: "saved-file-sha256",
+          file: current.descriptor
+        };
+        saveReceiptDocument(saveReceipt, receiptStatus, receiptFilename, receipt);
+      };
+      prepare.onclick = () => {
+        prepare.disabled = accept.disabled = accept.hidden = true;
+        offer.value = answer.value = "";
+        offerField.classList.add("hidden");
+        answerField.classList.add("hidden");
+        clearShare();
+        const previous = peer;
+        peer = void 0;
+        activeChannel = void 0;
+        previous?.close();
+        let session;
+        void (async () => {
+          requireSource(current);
+          session = peer = createLivePeer();
+          const channel = activeChannel = session.createDataChannel(liveDataLabel, { ordered: true });
+          let fileSent = false;
+          let saveAllowed = false;
+          let resumeOffset = 0;
+          const onFailure = (error) => {
+            if (current.file && peer === session && !invitation.savedAt) {
+              peer = void 0;
+              activeChannel = void 0;
+              offer.value = answer.value = "";
+              offerField.classList.add("hidden");
+              answerField.classList.add("hidden");
+              clearShare();
+              accept.disabled = accept.hidden = true;
+              report(feedback2, error instanceof Error ? error.message : "The direct connection stopped.", true);
+              prepare.disabled = false;
+              prepare.textContent = "Create fresh offer";
+            }
+            if (current.file || peer !== session) session?.close();
+          };
+          channel.onclose = () => {
+            if (current.file && peer === session && !invitation.savedAt) {
+              onFailure(new Error("Connection closed. Create a fresh offer and send it back to this recipient."));
+            }
+          };
+          channel.onerror = () => onFailure(new Error("The direct connection stopped. Issue a fresh offer."));
+          session.onconnectionstatechange = () => {
+            if (session?.connectionState === "failed") onFailure(new Error("A direct connection could not be made."));
+          };
+          const sendCurrent = (startOffset = 0) => {
+            if (peer !== session) return;
+            fileSent = saveAllowed = false;
+            report(feedback2, startOffset ? "Resuming at " + startOffset.toLocaleString() + " bytes\u2026" : "Sending file\u2026");
+            void sendFile(channel, current.descriptor, startOffset, () => {
+              if (peer !== session) throw new Error("This pickup offer was replaced.");
+              return requireSource(current);
+            }, (sent) => report(feedback2, "Sent " + Math.floor(sent / current.descriptor.size * 100) + "%")).then(() => {
+              if (peer !== session) return;
+              fileSent = true;
+              report(feedback2, "Delivered to browser. Waiting for a verified save.");
+            }).catch(onFailure);
+          };
+          channel.onopen = () => sendCurrent(resumeOffset);
+          channel.onmessage = ({ data }) => {
+            try {
+              if (peer !== session || invitation.savedAt) return;
+              requireSource(current);
+              const receipt = readPacket(data);
+              if (fileSent && receipt.type === "request-save") {
+                saveAllowed = true;
+                channel.send(JSON.stringify({ type: "save-authorized" }));
+                return;
+              }
+              if (fileSent && saveAllowed && current.descriptor.size >= moveSaveAt && receipt.type === "request-file") {
+                sendCurrent();
+                return;
+              }
+              if (!fileSent || !saveAllowed || receipt.type !== "saved" || receipt.sha256 !== current.descriptor.sha256 || receipt.size !== current.descriptor.size) throw new Error("The recipient sent an invalid pickup receipt.");
+              invitation.savedAt = Date.now();
+              report(feedback2, "Verified save \xB7 " + new Date(invitation.savedAt).toLocaleString());
+              invitation.close(true);
+              updateSenderProgress(current);
+              channel.send(JSON.stringify({ type: "saved-confirmed" }));
+              channel.close();
+              peer = void 0;
+              closeTimer = setTimeout(() => session?.close(), 1500);
+            } catch (error) {
+              onFailure(error);
+            }
+          };
+          const ticket = await createLiveOffer(session, current.expiresAt, transferId);
+          requireSource(current);
+          if (peer !== session) return;
+          offer.value = chatCode(ticket.code);
+          offerField.classList.remove("hidden");
+          answerField.classList.remove("hidden");
+          const view = shareView;
+          const hash = pickupHash(ticket.code);
+          if (view && (view.origin + view.path + "/" + hash).length <= chatMessageLimit) {
+            if (showLink) {
+              link.value = view.origin + view.path + hash;
+              linkField.classList.remove("hidden");
+            }
+            share.disabled = false;
+            share.classList.remove("hidden");
+            share.onclick = () => {
+              try {
+                requireSource(current);
+              } catch {
+                return;
+              }
+              share.disabled = true;
+              const isCurrentOffer = () => Boolean(current.file && peer === session && offer.value);
+              void sharePickup(hash).then((result) => {
+                if (!isCurrentOffer()) return;
+                requireSource(current);
+                link.value = ownShareUrl(result.url, view, hash);
+                linkField.classList.remove("hidden");
+                report(feedback2, result.copied ? "Pickup link copied. Send it in private Civitai chat." : result.method === "share" ? "Civitai opened sharing. Use private Civitai chat." : "Copy the displayed pickup link into private Civitai chat.");
+              }).catch((error) => {
+                if (!isCurrentOffer()) return;
+                if (link.value) report(feedback2, "Copy the displayed pickup link into private Civitai chat.");
+                else report(feedback2, error instanceof Error ? error.message : "Share the offer code in private Civitai chat.", true);
+              }).finally(() => {
+                if (isCurrentOffer()) share.disabled = false;
+              });
+            };
+          }
+          accept.disabled = accept.hidden = false;
+          prepare.disabled = false;
+          report(feedback2, link.value ? "Send the pickup link in private Civitai chat. Paste the reply when it arrives." : "Send the offer in private Civitai chat. Paste the reply when it arrives.");
+          accept.onclick = () => {
+            accept.disabled = true;
+            void (async () => {
+              requireSource(current);
+              if (peer !== session || !session) throw new Error("Create a fresh pickup offer.");
+              const reply = await readLiveAnswer(ticket.offer, answer.value);
+              requireSource(current);
+              if (peer !== session) return;
+              const point = reply.resume;
+              resumeOffset = point && point.sha256 === current.descriptor.sha256 && point.offset <= current.descriptor.size && (point.offset === current.descriptor.size || point.offset % chunkSize === 0) ? point.offset : 0;
+              await session.setRemoteDescription({ type: "answer", sdp: reply.sdp });
+              requireSource(current);
+              if (peer !== session) return;
+              offer.value = answer.value = "";
+              offerField.classList.add("hidden");
+              answerField.classList.add("hidden");
+              accept.hidden = true;
+              clearShare();
+              report(feedback2, "Connecting directly\u2026");
+            })().catch((error) => {
+              if (!current.file || peer !== session) return;
+              report(feedback2, error instanceof Error ? error.message : "The pickup reply was rejected.", true);
+              accept.disabled = false;
+            });
+          };
+        })().catch((error) => {
+          session?.close();
+          if (!current.file || peer !== session) return;
+          prepare.disabled = false;
+          report(feedback2, error instanceof Error ? error.message : "Could not create a pickup offer.", true);
+        });
+      };
+      current.recipients.push(invitation);
+      return prepare;
+    }
+    start.onclick = () => {
+      if (!supported || owner?.file || start.disabled) return;
+      const dropoff = incomingDropoff;
+      if (dropoff && !timeRemaining(dropoff.expiresAt, dropoff.elapsedDeadline)) {
+        checkDeadlines();
+        return;
+      }
+      start.disabled = true;
+      report(senderStatus, "Checking the file\u2026");
+      void (async () => {
+        const files = Array.from(source.files ?? []);
+        const names = dropoff ? ["Requester"] : recipients.value.split(/\r?\n/).map((name) => name.trim()).filter(Boolean);
+        if (!names.length || names.length > DEFAULT_ACTIVE_INVITATIONS || names.some((name) => name.length > 80) || new Set(names.map((name) => name.toLowerCase())).size !== names.length) {
+          throw new Error("Enter 1 to 20 distinct recipients, one per line.");
+        }
+        const { file, info, archive } = await prepareLiveSource(files);
+        if (dropoff && (incomingDropoff !== dropoff || !timeRemaining(dropoff.expiresAt, dropoff.elapsedDeadline))) {
+          throw new Error(incomingDropoff ? dropoffExpired : "The drop-off request closed while the file was being prepared.");
+        }
+        const end = action("Close handoff", "danger");
+        const receipts = action("Save all receipts");
+        const receiptStatus = status();
+        receipts.hidden = true;
+        const expiresAt = dropoff?.expiresAt ?? Date.now() + pickupWindowMs;
+        const elapsedDeadline = dropoff?.elapsedDeadline ?? performance.now() + pickupWindowMs;
+        const expiryMessage = dropoff ? dropoffExpired : senderExpired;
+        const current = {
+          file,
+          descriptor: info,
+          expiresAt,
+          elapsedDeadline,
+          expiryMessage,
+          recipients: [],
+          end,
+          receipts,
+          timer: setTimeout(() => endHandoff(current, expiryMessage), Math.ceil(timeRemaining(expiresAt, elapsedDeadline)))
+        };
+        owner = current;
+        source.value = "";
+        recipients.value = "";
+        senderForm.hidden = true;
+        senderPreview.replaceChildren(packagePreview(info, archive));
+        senderRows.replaceChildren();
+        for (const name of names) {
+          const prepare = invitationRow(current, name, Boolean(dropoff));
+          if (dropoff) prepare.click();
+        }
+        end.onclick = () => endHandoff(current, "This handoff was closed by the sender.");
+        receipts.onclick = () => {
+          const verified = current.recipients.flatMap(({ label, savedAt }) => savedAt === void 0 ? [] : [
+            { recipientLabel: label, verifiedAt: new Date(savedAt).toISOString() }
+          ]);
+          if (!verified.length) return;
+          saveReceiptDocument(receipts, receiptStatus, "civitai-safe-pickup-receipts.json", {
+            type: "civitai-safe.pickup-receipts",
+            version: 1,
+            verification: "saved-file-sha256",
+            file: info,
+            recipients: verified
+          });
+        };
+        senderRows.append(receipts, receiptStatus, end);
+        if (dropoff) {
+          setDropoff();
+          clearPickupRoute();
+        }
+        report(senderStatus, (dropoff ? "Drop-off ready until " : "Ready to share until ") + new Date(current.expiresAt).toLocaleString() + ". " + info.name);
+      })().catch((error) => {
+        start.disabled = false;
+        report(senderStatus, error instanceof Error ? error.message : "Could not prepare the handoff.", true);
+      });
+    };
+    function takeRetained() {
+      const previous = retained;
+      clearTimeout(retentionTimer);
+      retained = void 0;
+      discardPartial.hidden = true;
+      return previous;
+    }
+    function checkRetainedDeadline() {
+      if (retained && !timeRemaining(retained.expiresAt, retained.elapsedDeadline)) {
+        takeRetained()?.hash.destroy();
+        if (!closeGuest) report(receiverStatus, receiverExpired);
+      }
+    }
+    discardPartial.onclick = () => {
+      takeRetained()?.hash.destroy();
+      report(receiverStatus, "Partial file discarded.");
+    };
+    connect.onclick = () => {
+      if (!supported || connect.disabled) return;
+      if (!offerInput.value.trim()) {
+        offerInput.focus();
+        return;
+      }
+      closeGuest?.();
+      connect.disabled = true;
+      receiverArea.replaceChildren();
+      report(receiverStatus, "Preparing your pickup reply\u2026");
+      void (async () => {
+        const code = offerInput.value;
+        const offer = await readLiveOffer(code);
+        if (Date.now() >= offer.expiresAt) {
+          checkRetainedDeadline();
+          clearOfferDeadline();
+          offerInput.value = "";
+          clearPickupRoute();
+          report(receiverStatus, receiverExpired);
+          return;
+        }
+        checkRetainedDeadline();
+        if (retained && (retained.transferId !== offer.transferId || retained.expiresAt !== offer.expiresAt)) {
+          takeRetained()?.hash.destroy();
+        }
+        if (retained?.offerId === offer.id) throw new Error("Get a fresh offer from the sender to resume this pickup.");
+        const resume = retained ? { offset: retained.offset, sha256: retained.file.sha256 } : void 0;
+        const resumeDeadline = retained?.elapsedDeadline ?? Infinity;
+        const peer = createLivePeer();
+        const reply = part("textarea");
+        reply.rows = 2;
+        reply.readOnly = true;
+        reply.onfocus = () => reply.select();
+        const replyField = field("Your pickup reply", reply);
+        const output2 = part("div", "stack");
+        const cancel = action("Cancel pickup");
+        receiverArea.append(replyField, output2, cancel);
+        let receiptPending = false;
+        let receiptConfirmed = false;
+        let closed = false;
+        let bytes;
+        let downloadedFile;
+        let offset = 0;
+        let reportedOffset = 0;
+        let completed = false;
+        let hash = sha256.create();
+        const abort = new AbortController();
+        const elapsedDeadline = Math.min(
+          resumeDeadline,
+          performance.now() + Math.min(pickupWindowMs, offer.expiresAt - Date.now())
+        );
+        let resolveSave;
+        let cancelSave;
+        function checkDeadline() {
+          if (!closed && !timeRemaining(offer.expiresAt, elapsedDeadline)) {
+            close();
+            report(receiverStatus, receiverExpired);
+          }
+        }
+        const expire = setTimeout(checkDeadline, Math.ceil(timeRemaining(offer.expiresAt, elapsedDeadline)));
+        function close(keepPartial = false) {
+          if (closed) return;
+          closed = true;
+          clearTimeout(expire);
+          closeGuest = checkGuestDeadline = void 0;
+          abort.abort();
+          cancelSave?.();
+          peer.close();
+          if (keepPartial && !completed && offer.transferId && downloadedFile && bytes && offset && (offset === downloadedFile.size || offset % chunkSize === 0) && timeRemaining(offer.expiresAt, elapsedDeadline)) {
+            takeRetained()?.hash.destroy();
+            retained = {
+              transferId: offer.transferId,
+              offerId: offer.id,
+              expiresAt: offer.expiresAt,
+              elapsedDeadline,
+              file: downloadedFile,
+              bytes,
+              offset,
+              hash
+            };
+            retentionTimer = setTimeout(checkRetainedDeadline, Math.ceil(timeRemaining(offer.expiresAt, elapsedDeadline)));
+            discardPartial.hidden = false;
+          } else {
+            if (!keepPartial) takeRetained()?.hash.destroy();
+            hash.destroy();
+          }
+          bytes = void 0;
+          downloadedFile = void 0;
+          if (offerInput.value === code) {
+            offerInput.value = "";
+            clearOfferDeadline();
+            clearPickupRoute();
+          }
+          reply.value = "";
+          replyField.classList.add("hidden");
+          output2.replaceChildren();
+          cancel.remove();
+          receiverForm.hidden = false;
+        }
+        closeGuest = () => close();
+        checkGuestDeadline = checkDeadline;
+        receiverForm.hidden = true;
+        cancel.onclick = () => {
+          close();
+          report(receiverStatus, "Pickup canceled.");
+        };
+        function fail(error, reconnectable = false) {
+          if (closed) return;
+          close(reconnectable);
+          if (retained) {
+            report(receiverStatus, "Connection interrupted. " + retained.offset.toLocaleString() + " bytes retained. Open a fresh offer from the sender in this tab to resume.", true);
+            return;
+          }
+          report(receiverStatus, error instanceof Error ? error.message : "Pickup ended before verification.", true);
+        }
+        function requireOpen() {
+          checkDeadline();
+          if (closed) throw new Error("This pickup offer is closed.");
+        }
+        peer.onconnectionstatechange = () => {
+          if (peer.connectionState === "failed") fail(new Error("A direct connection could not be made. Ask the sender for a fresh offer."), true);
+        };
+        peer.ondatachannel = ({ channel }) => {
+          if (channel.label !== liveDataLabel || !channel.ordered) {
+            fail(new Error("This pickup uses an incompatible connection."));
+            return;
+          }
+          peer.ondatachannel = ({ channel: extra }) => extra.close();
+          channel.binaryType = "arraybuffer";
+          channel.onopen = () => {
+            reply.value = "";
+            replyField.classList.add("hidden");
+            report(receiverStatus, "Receiving the file\u2026");
+          };
+          channel.onclose = () => {
+            if (!receiptConfirmed) fail(new Error(receiptPending ? "The receipt was sent. Ask the sender to confirm it arrived." : "Connection closed before verification. Ask the sender for a fresh offer."), !receiptPending);
+          };
+          channel.onerror = () => fail(new Error("The direct connection stopped. Ask the sender for a fresh offer."), true);
+          channel.onmessage = ({ data }) => {
+            try {
+              requireOpen();
+              const packet = typeof data === "string" ? readPacket(data) : void 0;
+              if (packet?.type === "pickup-closed") {
+                if (packet.reason === "revoked") throw new Error("The sender revoked this pickup.");
+                throw new Error(packet.reason === "expired" ? receiverExpired : "The sender closed the connection before verification.");
+              }
+              if (packet?.type === "save-authorized") {
+                if (!resolveSave) throw new Error("The sender returned an unexpected save authorization.");
+                resolveSave();
+                return;
+              }
+              if (!downloadedFile) {
+                if (!packet) throw new Error("The sender did not provide a valid file description.");
+                downloadedFile = descriptor(packet);
+                const startOffset = packet.offset ?? 0;
+                if (startOffset) {
+                  const checkpoint2 = retained;
+                  if (!resume || !checkpoint2 || checkpoint2.transferId !== offer.transferId || startOffset !== resume.offset || startOffset !== checkpoint2.offset || downloadedFile.sha256 !== checkpoint2.file.sha256 || downloadedFile.name !== checkpoint2.file.name || downloadedFile.size !== checkpoint2.file.size) throw new Error("The resumed file does not match the partial pickup.");
+                  takeRetained();
+                  hash.destroy();
+                  hash = checkpoint2.hash;
+                  offset = reportedOffset = checkpoint2.offset;
+                  bytes = checkpoint2.bytes;
+                  report(receiverStatus, "Resuming at " + offset.toLocaleString() + " bytes\u2026");
+                } else {
+                  if (startOffset !== 0) throw new Error("The sender supplied an invalid resume point.");
+                  takeRetained()?.hash.destroy();
+                  bytes = new Uint8Array(downloadedFile.size);
+                }
+                return;
+              }
+              if (data instanceof ArrayBuffer) {
+                if (completed || !bytes || !data.byteLength || data.byteLength > chunkSize || data.byteLength > bytes.length - offset) {
+                  throw new Error("The received file did not match its declared length.");
+                }
+                const chunk = new Uint8Array(data);
+                bytes.set(chunk, offset);
+                hash.update(chunk);
+                offset += chunk.length;
+                if (offset - reportedOffset >= MIB) {
+                  reportedOffset = offset;
+                  report(receiverStatus, "Received " + Math.floor(offset / downloadedFile.size * 100) + "%");
+                }
+                return;
+              }
+              if (completed) {
+                if (!receiptPending || packet?.type !== "saved-confirmed") throw new Error("The sender sent an invalid receipt confirmation.");
+                receiptConfirmed = true;
+                close();
+                report(receiverStatus, "Verified save confirmed by the sender.");
+                return;
+              }
+              if (packet?.type !== "end" || !bytes || offset !== downloadedFile.size || bytesToHex(hash.digest()) !== downloadedFile.sha256) {
+                throw new Error("The received file did not match the sender\u2019s SHA-256.");
+              }
+              completed = true;
+              const info = downloadedFile;
+              const save = action("Save file", "primary");
+              const verify = part("input");
+              verify.type = "file";
+              verify.disabled = true;
+              const verification = field("Verify saved file", verify);
+              verification.hidden = true;
+              output2.append(packagePreview(info, previewLiveArchive(info.name, bytes.buffer)), save, verification);
+              report(receiverStatus, "Incoming file verified. Save it, then select the saved copy.");
+              save.onclick = () => {
+                save.disabled = true;
+                void (async () => {
+                  requireOpen();
+                  if (!bytes) {
+                    hash = sha256.create();
+                    offset = reportedOffset = 0;
+                    completed = false;
+                    downloadedFile = void 0;
+                    output2.replaceChildren();
+                    report(receiverStatus, "Receiving a fresh copy\u2026");
+                    try {
+                      channel.send(JSON.stringify({ type: "request-file" }));
+                    } catch {
+                      fail(new Error("Ask the sender for a fresh offer."));
+                    }
+                    return;
+                  }
+                  await new Promise((resolve, reject) => {
+                    const reset = () => {
+                      clearTimeout(timer2);
+                      resolveSave = cancelSave = void 0;
+                    };
+                    const cancel2 = () => {
+                      reset();
+                      reject(new Error("The sender did not authorize the save."));
+                    };
+                    const timer2 = setTimeout(cancel2, 1e4);
+                    resolveSave = () => {
+                      reset();
+                      resolve();
+                    };
+                    cancelSave = cancel2;
+                    try {
+                      channel.send(JSON.stringify({ type: "request-save" }));
+                    } catch {
+                      cancel2();
+                    }
+                  });
+                  requireOpen();
+                  if (!bytes) throw new Error("The pickup has closed.");
+                  const buffer = bytes.buffer;
+                  try {
+                    await savedThroughHost(info.name, buffer, abort.signal);
+                  } finally {
+                    if (buffer.byteLength === 0) {
+                      bytes = void 0;
+                      save.textContent = "Get a fresh copy";
+                      save.classList.remove("primary");
+                    }
+                  }
+                  requireOpen();
+                  verify.disabled = false;
+                  verification.hidden = false;
+                  if (bytes) save.textContent = "Save file";
+                  report(receiverStatus, "Civitai started the save. Select the finished file to verify it on disk.");
+                })().catch((error) => {
+                  if (closed) return;
+                  if (bytes) save.textContent = "Retry save";
+                  report(receiverStatus, error instanceof Error ? error.message : "Civitai refused to save the file.", true);
+                }).finally(() => {
+                  if (!closed && !receiptPending) save.disabled = false;
+                });
+              };
+              verify.onchange = () => {
+                const saved = verify.files?.[0];
+                verify.value = "";
+                if (!saved || receiptPending) return;
+                verify.disabled = save.disabled = true;
+                void (async () => {
+                  requireOpen();
+                  if (!await verifyLiveFile(saved, info, abort.signal)) throw new Error("The saved file did not match the sender\u2019s SHA-256.");
+                  requireOpen();
+                  channel.send(JSON.stringify({ type: "saved", size: info.size, sha256: info.sha256 }));
+                  bytes = void 0;
+                  receiptPending = true;
+                  report(receiverStatus, "Verified save. Waiting for the sender to confirm the receipt.");
+                })().catch((error) => {
+                  if (closed) return;
+                  verify.disabled = save.disabled = false;
+                  report(receiverStatus, error instanceof Error ? error.message : "Could not verify the saved file.", true);
+                });
+              };
+            } catch (error) {
+              fail(error);
+            }
+          };
+        };
+        try {
+          const answer = await createLiveAnswer(peer, offer, resume);
+          requireOpen();
+          reply.value = chatCode(answer);
+          if (offerInput.value === code) {
+            offerInput.value = "";
+            clearOfferDeadline();
+            clearPickupRoute();
+          }
+          report(receiverStatus, "Send this reply to the sender through Civitai chat. Keep this tab open.");
+        } catch (error) {
+          if (closed) return;
+          close(Boolean(resume));
+          throw error;
+        }
+      })().catch((error) => report(receiverStatus, error instanceof Error ? error.message : "Could not open the pickup offer.", true)).finally(() => {
+        connect.disabled = false;
+      });
+    };
+    function checkDeadlines() {
+      if (owner && !timeRemaining(owner.expiresAt, owner.elapsedDeadline)) endHandoff(owner, owner.expiryMessage);
+      if (incomingDropoff && !timeRemaining(incomingDropoff.expiresAt, incomingDropoff.elapsedDeadline)) {
+        setDropoff();
+        clearPickupRoute();
+        report(senderStatus, dropoffExpired, true);
+      }
+      if (issuedDropoff && !timeRemaining(issuedDropoff.expiresAt, issuedDropoff.elapsedDeadline)) {
+        clearIssuedRequest();
+        report(requestStatus, dropoffExpired);
+      }
+      checkGuestDeadline?.();
+      checkRetainedDeadline();
+      checkOfferDeadline?.();
+    }
+    document.addEventListener("visibilitychange", checkDeadlines);
+    document.addEventListener("resume", checkDeadlines);
+    window.addEventListener("focus", checkDeadlines);
+    window.addEventListener("pageshow", checkDeadlines);
+    window.addEventListener("pagehide", () => {
+      if (owner) endHandoff(owner, "The sender closed this tab.");
+      closeGuest?.();
+      takeRetained()?.hash.destroy();
+      offerInput.value = "";
+      clearOfferDeadline();
+      setDropoff();
+      clearIssuedRequest();
+    });
+    return {
+      saveFile: savedThroughHost,
+      hostReady(origin2, context) {
+        if (hostInitialized) return;
+        hostInitialized = true;
+        if ("search" in context && typeof context.search === "string" && "slug" in context && typeof context.slug === "string" && /^[a-z0-9-]+$/.test(context.slug)) {
+          shareView = { origin: origin2, path: "/apps/run/" + context.slug };
+        }
+        requestButton.disabled = !shareView;
+        if (!supported) {
+          report(senderStatus, "This browser does not support live pickup in the app frame.", true);
+          return;
+        }
+        if (!owner?.file) start.disabled = false;
+        connect.disabled = false;
+        if ("hash" in context) loadRouteHash(context.hash);
+      },
+      handleSave(message) {
+        if (message.payload?.requestId === saveRequest?.id) {
+          saveRequest?.complete(message.payload.ok ? void 0 : message.payload.error || "Civitai refused to save the file.");
+        }
+      },
+      handleShare(message) {
+        if (message.payload?.requestId === shareRequest?.id) shareRequest?.complete(message.payload.result);
+      },
+      loadRouteHash
+    };
+  }
+
+  // src/civitai/composer.ts
+  var sites = ["https://civitai.com", "https://civitai.red"];
+  var checkpoint = document.querySelector("#checkpoint");
+  var lora = document.querySelector("#lora");
+  var copy = document.querySelector("#copy");
+  var savePins = document.querySelector("#save-pins");
+  var clear = document.querySelector("#clear");
+  var list = document.querySelector("#picks");
+  var output = document.querySelector("#manifest");
+  var feedback = document.querySelector("#status");
+  var selections = /* @__PURE__ */ new Map();
+  var origin;
+  var pending;
+  var timer;
+  function send(value, site = origin, transfer = []) {
+    if (site) window.parent.postMessage(value, site, transfer);
+  }
+  var live = mountLivePickup(document.querySelector("#live-pickup"), (value, transfer) => send(value, origin, transfer));
+  function updatePins() {
+    const dependencies = [...selections.values()].map(({ version, files, fileId }) => {
+      const file = fileId === void 0 ? void 0 : files.get(fileId);
+      return file ? { ...version, fileId: file.fileId, sha256: file.sha256, size: file.size } : version;
+    });
+    output.value = JSON.stringify({ version: 1, dependencies }, null, 2);
+  }
+  function render() {
+    list.replaceChildren();
+    for (const selection of selections.values()) {
+      const { name, version, files, fileId } = selection;
+      const item = document.createElement("li");
+      const summary = `${name} \xB7 version ${version.versionId}`;
+      if (files.size > 1) {
+        const label = document.createElement("label");
+        label.className = "field";
+        const select = document.createElement("select");
+        select.setAttribute("aria-label", `File for ${name}, version ${version.versionId}`);
+        select.append(new Option("Version only", ""));
+        for (const file of files.values()) select.append(new Option(`${file.name} \xB7 file #${file.fileId}`, String(file.fileId)));
+        select.value = fileId === void 0 ? "" : String(fileId);
+        select.onchange = () => {
+          selection.fileId = select.value ? Number(select.value) : void 0;
+          updatePins();
+        };
+        label.append(summary, select);
+        item.append(label);
+      } else {
+        const file = fileId === void 0 ? void 0 : files.get(fileId);
+        item.textContent = file ? `${summary} \xB7 ${file.name} \xB7 file #${file.fileId}` : `${summary} \xB7 version pin`;
+      }
+      list.append(item);
+    }
+    updatePins();
+    copy.disabled = savePins.disabled = clear.disabled = !selections.size;
+    checkpoint.disabled = lora.disabled = !origin || Boolean(pending);
+  }
+  function pick(resourceType) {
+    if (!origin || pending) return;
+    pending = crypto.randomUUID();
+    render();
+    feedback.textContent = "Choose a resource in Civitai.";
+    send({ type: "OPEN_RESOURCE_PICKER", payload: {
+      requestId: pending,
+      resourceType,
+      ...resourceType === "LORA" ? { multiple: { max: 5 } } : {}
+    } });
+    timer = setTimeout(() => {
+      pending = void 0;
+      feedback.textContent = "The Civitai picker did not respond. Try again.";
+      render();
+    }, 6e4);
+  }
+  async function pin(resource, site) {
+    if (!resource || !Number.isSafeInteger(resource.versionId) || resource.versionId <= 0 || !Number.isSafeInteger(resource.modelId) || resource.modelId <= 0) {
+      throw new Error("Civitai did not return a model and version.");
+    }
+    const response = await fetch(`${site}/api/v1/model-versions/${resource.versionId}`, {
+      headers: { Accept: "application/json" },
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
+      redirect: "error",
+      signal: AbortSignal.timeout(1e4)
+    });
+    if (!response.ok) throw new Error(`Version ${resource.versionId} could not be resolved on this Civitai domain.`);
+    const details = await response.json();
+    if (details.id !== resource.versionId || details.modelId !== resource.modelId) throw new Error("The public model identity did not match the picker.");
+    const [version] = validateDependencies([{ air: details.air, modelId: details.modelId, versionId: details.id }]);
+    const previous = selections.get(version.versionId);
+    if (selections.size >= MAX_DEPENDENCIES && !previous) throw new Error(`Use up to ${MAX_DEPENDENCIES} dependencies.`);
+    const files = catalogModelFiles(details.files);
+    const fileId = files.size === 1 ? files.keys().next().value : previous?.fileId !== void 0 && files.has(previous.fileId) ? previous.fileId : void 0;
+    selections.set(version.versionId, {
+      name: typeof resource.modelName === "string" ? resource.modelName.slice(0, 160) : version.air,
+      version,
+      files,
+      fileId
+    });
+  }
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent || !sites.includes(event.origin) || origin && origin !== event.origin) return;
+    const message = event.data;
+    if (!message || typeof message !== "object") return;
+    if (message.type === "BLOCK_INIT" && message.payload?.context?.slotId === "app.page" && typeof message.payload.blockInstanceId === "string") {
+      origin = event.origin;
+      feedback.textContent = "Ready to select resources.";
+      render();
+      live.hostReady(origin, message.payload.context);
+      send({ type: "BLOCK_READY", payload: { height: document.documentElement.scrollHeight } });
+    } else if (message.type === "SAVE_IMAGE_RESULT") {
+      live.handleSave(message);
+    } else if (message.type === "SHARE_LINK_RESULT" && origin) {
+      live.handleShare(message);
+    } else if (message.type === "ROUTE_CHANGED" && origin) {
+      live.loadRouteHash(message.payload?.hash);
+    } else if (message.type === "RESOURCE_PICKER_RESULT" && origin && pending && pending === message.payload?.requestId) {
+      clearTimeout(timer);
+      const site = origin;
+      const values = Array.isArray(message.payload.selectedResources) ? message.payload.selectedResources.slice(0, 5) : message.payload.selected ? [message.payload.selected] : [];
+      const failed = message.payload.error;
+      void (async () => {
+        try {
+          if (failed) throw new Error("The Civitai picker could not complete that request.");
+          if (!values.length) feedback.textContent = "Selection canceled.";
+          else {
+            feedback.textContent = "Resolving exact model versions\u2026";
+            for (const item of values) await pin(item, site);
+            feedback.textContent = "Pins ready to copy.";
+          }
+        } catch (error) {
+          feedback.textContent = error instanceof Error ? error.message : "Could not resolve Civitai model versions.";
+        } finally {
+          pending = void 0;
+          render();
+        }
+      })();
+    }
+  });
+  checkpoint.onclick = () => pick("Checkpoint");
+  lora.onclick = () => pick("LORA");
+  clear.onclick = () => {
+    selections.clear();
+    render();
+    feedback.textContent = "Selection cleared.";
+  };
+  copy.onclick = () => {
+    output.focus();
+    output.select();
+    feedback.textContent = "Copy the selected pins with your browser\u2019s copy command.";
+  };
+  savePins.onclick = () => {
+    savePins.disabled = true;
+    void live.saveFile("civitai-dependency-pins.json", new TextEncoder().encode(output.value).buffer).then(() => {
+      feedback.textContent = "Civitai started the JSON save.";
+    }).catch((error) => {
+      feedback.textContent = error instanceof Error ? error.message : "Could not save the pins.";
+    }).finally(() => {
+      savePins.disabled = !selections.size;
+    });
+  };
+  render();
+  if (window.parent !== window) for (const site of sites) send({ type: "BLOCK_HELLO" }, site);
+})();
+
+</script>
+  </body>
+</html>

@@ -1,2 +1,8 @@
 submission/index.html -text
 submission/block.manifest.json -text
+submission/v0.4.0/index.html -text
+submission/v0.4.0/block.manifest.json -text
+civitai/block.manifest.json -text
+src/civitai/index.html -text
+src/civitai/style.css -text
+src/web/style.css -text

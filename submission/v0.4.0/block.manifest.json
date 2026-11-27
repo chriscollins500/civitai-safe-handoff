@@ -1,0 +1,16 @@
+{
+  "$schema": "https://civitai.com/schemas/app-block/v1.json",
+  "blockId": "civitai-safe-handoff",
+  "version": "0.4.0",
+  "name": "Civitai SAFE Handoff",
+  "tagline": "Share supported files directly and pin exact Civitai resources.",
+  "description": "Preview files and ZIP contents, request a drop-off, or share up to 20 separate pickup offers in Civitai chat. Resume interrupted live transfers without resending received bytes. Verify saves and export receipts individually or together. Keep both tabs open during transfer. Pin exact Civitai resources and export dependency JSON.",
+  "repository": "https://github.com/chriscollins500/civitai-safe-handoff",
+  "bugs": "https://github.com/chriscollins500/civitai-safe-handoff/issues",
+  "category": "utility",
+  "contentRating": "pg13",
+  "scopes": [],
+  "renderMode": "iframe",
+  "iframe": { "sandbox": "allow-scripts", "minHeight": 360, "maxHeight": null, "resizable": false },
+  "page": { "path": "/", "title": "Civitai SAFE Handoff" }
+}

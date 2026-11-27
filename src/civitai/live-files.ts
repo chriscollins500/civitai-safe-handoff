@@ -18,6 +18,11 @@ export interface LiveFile {
   sha256: string;
 }
 
+export interface LiveArchivePreview {
+  entryCount: number;
+  entries: { name: string; size: number }[];
+}
+
 function fileExtension(name: string) {
   const period = name.lastIndexOf('.');
   return period > 0 ? name.slice(period + 1).toLowerCase() : '';
@@ -44,17 +49,45 @@ export function requireSaveCandidate(name: string, size: number) {
   if (!Number.isSafeInteger(size) || size < 1 || size > cap) throw new Error(`This file must be between 1 byte and ${cap / MIB} MiB.`);
 }
 
-export async function inspectSaveBytes(name: string, bytes: ArrayBuffer, signal?: AbortSignal): Promise<void> {
+function validateArchive(bytes: ArrayBuffer) {
+  const result = validateSaveZip(bytes);
+  if (!result.ok) throw new Error(result.error);
+  return result;
+}
+
+function archivePreview(bytes: ArrayBuffer, entryCount: number): LiveArchivePreview {
+  // Called after the SDK has validated the directory, layout, and UTF-8 paths.
+  const view = new DataView(bytes);
+  let cursor = view.getUint32(bytes.byteLength - 22 + 16, true);
+  const entries: LiveArchivePreview['entries'] = [];
+  for (let index = 0; index < Math.min(entryCount, MAX_FILES); index++) {
+    const size = view.getUint32(cursor + 24, true);
+    const nameBytes = view.getUint16(cursor + 28, true);
+    const extraBytes = view.getUint16(cursor + 30, true);
+    const commentBytes = view.getUint16(cursor + 32, true);
+    const name = utf8.decode(new Uint8Array(bytes, cursor + 46, nameBytes));
+    entries.push({ name: name.length > 180 ? name.slice(0, 177) + '…' : name, size });
+    cursor += 46 + nameBytes + extraBytes + commentBytes;
+  }
+  return { entryCount, entries };
+}
+
+export function previewLiveArchive(name: string, bytes: ArrayBuffer) {
+  if (fileExtension(name) !== 'zip') return undefined;
+  requireSaveCandidate(name, bytes.byteLength);
+  return archivePreview(bytes, validateArchive(bytes).entryCount);
+}
+
+export async function inspectSaveBytes(name: string, bytes: ArrayBuffer, signal?: AbortSignal): Promise<LiveArchivePreview | undefined> {
   requireSaveCandidate(name, bytes.byteLength);
   signal?.throwIfAborted();
   const type = fileExtension(name);
   const data = new Uint8Array(bytes);
   if (type === 'zip') {
-    const result = validateSaveZip(bytes);
-    if (!result.ok) throw new Error(result.error);
+    const result = validateArchive(bytes);
     const error = await verifySaveZipInflate(bytes, result.deflated, signal);
     if (error) throw new Error(error);
-    return;
+    return archivePreview(bytes, result.entryCount);
   }
   if (type === 'glb' || type === 'fbx') {
     const kind = looksLikeSaveModel3d(data);
@@ -76,18 +109,18 @@ export async function inspectSaveBytes(name: string, bytes: ArrayBuffer, signal?
   throw new Error('The image bytes and filename disagree.');
 }
 
-export async function describeLiveFile(file: File): Promise<LiveFile> {
-  requireSaveCandidate(file.name, file.size);
-  const bytes = await file.arrayBuffer();
-  await inspectSaveBytes(file.name, bytes, AbortSignal.timeout(90000));
-  return { name: file.name, size: file.size, sha256: bytesToHex(sha256(new Uint8Array(bytes))) };
-}
-
 export async function prepareLiveSource(files: readonly File[]) {
   if (!files.length || files.length > MAX_FILES) throw new Error(`Select 1 to ${MAX_FILES} supported files.`);
   const original = files[0];
   if (files.length === 1 && fileExtension(original.name) !== 'csv') {
-    return { file: original, info: await describeLiveFile(original) };
+    requireSaveCandidate(original.name, original.size);
+    const bytes = await original.arrayBuffer();
+    const archive = await inspectSaveBytes(original.name, bytes, AbortSignal.timeout(90000));
+    return {
+      file: original,
+      info: { name: original.name, size: original.size, sha256: bytesToHex(sha256(new Uint8Array(bytes))) },
+      archive,
+    };
   }
   const names = new Set<string>();
   const encoder = new TextEncoder();
@@ -112,9 +145,9 @@ export async function prepareLiveSource(files: readonly File[]) {
   }
   const bytes = zipSync(members, { level: 0, mtime: new Date(1980, 0, 1) });
   const name = 'civitai-safe-handoff.zip';
-  await inspectSaveBytes(name, bytes.buffer, AbortSignal.timeout(90000));
+  const archive = await inspectSaveBytes(name, bytes.buffer, AbortSignal.timeout(90000));
   const file = new File([bytes], name, { type: 'application/zip' });
-  return { file, info: { name, size: bytes.byteLength, sha256: bytesToHex(sha256(bytes)) } };
+  return { file, info: { name, size: bytes.byteLength, sha256: bytesToHex(sha256(bytes)) }, archive };
 }
 
 export async function verifyLiveFile(file: File, expected: LiveFile, signal?: AbortSignal) {

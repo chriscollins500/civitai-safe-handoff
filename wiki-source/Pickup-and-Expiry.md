@@ -13,3 +13,11 @@ A download that the browser already started can finish. Saved files, the origina
 Share each offer only in the intended recipient's private Civitai chat. The offer is a short-lived capability. Recipient labels help you match the reply to the person and organize receipts. The app validates the reply against its specific offer and checks the file hash separately.
 
 Files travel through a WebRTC data channel. The app holds bytes in memory for the live handoff and uses the Civitai host to start the local browser download. It requests zero account scopes and uses no file storage service.
+
+## Recipient controls in v0.3.0
+
+The locally tested candidate lets the sender choose **Revoke pickup** in an individual row before its save is verified. The selected pickup closes while the other offers keep working. The handoff closes when the last required recipient verifies or the sender revokes every offer.
+
+Choose **Save receipt** next to a verified recipient to download a JSON record with their label, the verification timestamp, and the file’s name, byte count and SHA-256. The button stays available after closure while the handoff’s rows remain on screen.
+
+The v0.4.0 candidate adds **Save all receipts** to download one file containing every recipient who has verified their save. An unfinished or revoked pickup creates no receipt. A partial file retained for a live retry expires at the original deadline, even after a fresh offer is created.

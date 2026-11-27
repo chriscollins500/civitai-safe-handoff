@@ -123,7 +123,7 @@ window.addEventListener('message', (event: MessageEvent<ParentToBlockMessage>) =
   } else if (message.type === 'SHARE_LINK_RESULT' && origin) {
     live.handleShare(message);
   } else if (message.type === 'ROUTE_CHANGED' && origin) {
-    live.loadPickupHash(message.payload?.hash);
+    live.loadRouteHash(message.payload?.hash);
   } else if (message.type === 'RESOURCE_PICKER_RESULT' && origin && pending && pending === message.payload?.requestId) {
     clearTimeout(timer);
     const site = origin;

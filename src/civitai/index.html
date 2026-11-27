@@ -12,7 +12,7 @@
         <h1>Civitai SAFE Handoff</h1>
         <p class="muted">Send files directly to your collaborators. Check who saved their copy.</p>
         <nav class="app-shortcuts" aria-label="Handoff shortcuts">
-          <a href="#send">Send files</a><a href="#pickup">Pick up a file</a><a href="#dependencies">Pin models</a>
+          <a href="#send">Send files</a><a href="#dropoff">Request a drop-off</a><a href="#pickup">Pick up a file</a><a href="#dependencies">Pin models</a>
         </nav>
       </div>
       <section class="live-section" id="live-pickup" aria-label="Live file handoff">
@@ -22,14 +22,20 @@
             <h2 id="send-title">Send files</h2>
             <div class="stack" id="live-sender-summary">
               <p class="status" role="status" id="live-sender-status"></p>
+              <div id="live-sender-preview"></div>
               <div class="records" id="live-sender-rows"></div>
             </div>
             <div class="stack" id="live-sender-form">
+              <div class="stack" id="requested-files" hidden>
+                <h3>Requested files</h3>
+                <ul id="requested-file-list"></ul>
+              </div>
               <label class="field">Files or ZIP <input type="file" id="live-source" multiple aria-describedby="file-hint"></label>
               <p class="quiet muted field-hint" id="file-hint">Choose up to 25 files. ZIPs up to 256 MiB.</p>
-              <label class="field">Recipients <textarea id="live-recipients" rows="2" placeholder="One name per line" aria-describedby="recipients-hint"></textarea></label>
+              <label class="field" id="recipient-field">Recipients <textarea id="live-recipients" rows="2" placeholder="One name per line" aria-describedby="recipients-hint"></textarea></label>
               <p class="quiet muted field-hint" id="recipients-hint">Enter up to 20 names, one per line. These labels are for your receipts.</p>
               <button type="button" class="button primary" id="live-start" disabled>Prepare handoff</button>
+              <button type="button" class="button" id="cancel-dropoff" hidden>Cancel drop-off</button>
             </div>
           </section>
           <section class="panel" id="pickup" aria-labelledby="pickup-title">
@@ -38,11 +44,24 @@
               <p class="muted">Open the sender’s pickup link or paste their offer code from private Civitai chat.</p>
               <label class="field">Pickup offer <textarea id="live-offer" rows="2"></textarea></label>
               <button type="button" class="button primary" id="live-accept" disabled>Create pickup reply</button>
+              <button type="button" class="button" id="discard-partial" hidden>Discard partial file</button>
             </div>
             <p class="status" role="status" id="live-receiver-status"></p>
             <div class="stack" id="live-receiver-area"></div>
           </section>
         </div>
+        <section class="panel" id="dropoff" aria-labelledby="dropoff-title">
+          <h2 id="dropoff-title">Request a drop-off</h2>
+          <p class="muted">Share a link in private Civitai chat to ask someone to send you a file.</p>
+          <details>
+            <summary>Add a file checklist</summary>
+            <label class="field">Requested files <textarea id="dropoff-checklist" rows="3" maxlength="800" autocomplete="off" aria-describedby="dropoff-checklist-hint"></textarea></label>
+            <p class="muted quiet" id="dropoff-checklist-hint">One item per line. Anyone with the link can read the list.</p>
+          </details>
+          <div class="actions"><button type="button" class="button primary" id="create-dropoff" disabled>Create request link</button></div>
+          <label class="field" id="dropoff-link-field" hidden>Drop-off request link <input type="url" id="dropoff-link" readonly></label>
+          <p class="status" id="dropoff-status" role="status"></p>
+        </section>
       </section>
       <section class="panel" id="dependencies">
         <h2>Pin Civitai models</h2>

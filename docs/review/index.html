@@ -15,6 +15,24 @@
       <figure class="shot"><a href="../assets/pickup.png"><img src="../assets/pickup.png" alt="The recipient’s verified incoming file with Save file and Verify saved file controls" loading="lazy"></a><figcaption>Pickup · Save the verified incoming file and select the downloaded copy.</figcaption></figure>
       <figure class="shot"><a href="../assets/receipts.png"><img src="../assets/receipts.png" alt="The sender’s three verified receipts and the message that the handoff has closed" loading="lazy"></a><figcaption>Receipts · The third verified save closes the handoff.</figcaption></figure>
     </div></section>
+    <section class="section rule" id="v040">
+      <h2>v0.4.0 candidate screenshots</h2>
+      <p class="body-copy">A local review build demonstrates live resume, ZIP preview, and combined receipts in a simulated Civitai host. The approved release appears above.</p>
+      <div class="gallery candidate-gallery">
+        <figure class="shot">
+          <a href="../assets/v0.4.0/v0.4.0-archive-preview.png"><img src="../assets/v0.4.0/v0.4.0-archive-preview.png" alt="ZIP preview showing verified entry names and byte counts before saving" loading="lazy"></a>
+          <figcaption>Review the ZIP contents before saving.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="../assets/v0.4.0/v0.4.0-resume-prompt.png"><img src="../assets/v0.4.0/v0.4.0-resume-prompt.png" alt="Interrupted pickup showing retained bytes and how to resume from a fresh offer" loading="lazy"></a>
+          <figcaption>Keep the pickup tab open and resume with a fresh offer from the same sender.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="../assets/v0.4.0/v0.4.0-batch-receipts.png"><img src="../assets/v0.4.0/v0.4.0-batch-receipts.png" alt="Sender with three verified saves and the Save all receipts button" loading="lazy"></a>
+          <figcaption>Download all verified receipts together.</figcaption>
+        </figure>
+      </div>
+    </section>
     <section class="section split rule" id="verification"><div><h2>Verify the release</h2><ol class="steps"><li><strong>Open the app in two browsers.</strong><span>Use Civitai.com and Civitai.red with a reachable direct network path.</span></li><li><strong>Send a small JSON or text fixture.</strong><span>Exchange the offer and reply in private chat. Verify the saved file and observe the receipt.</span></li><li><strong>Check both cutoff paths.</strong><span>Finish the last receipt and check closure. The browser regression suite also advances a test clock to the 24-hour deadline.</span></li></ol></div><div class="callout"><h3>Release materials</h3><p>The validation records identify the app build, fixture host, browser versions, byte limits and exact saved digests.</p><ul class="links"><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/evidence/civitai-only/v0.2.0-live-deployment.json">Live deployment evidence ↗</a></li><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/CIVITAI_APP_BOX.md">App-box evidence ↗</a></li><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/wiki/Review-and-Verification">Reviewer walkthrough ↗</a></li><li><a href="https://github.com/chriscollins500/civitai-safe-handoff/issues">Project support ↗</a></li></ul></div></section>
     <section class="section rule readable"><h2>Platform permissions</h2><p>The manifest requests zero account scopes. The App Block uses the native resource picker, the file save bridge, and the share or route hooks when the host provides them. Each user opens the app in a browser they already have.</p><p>GitHub Pages and the Wiki host project documentation and review materials. Live file transfers run in the Civitai app.</p></section>
   </main>

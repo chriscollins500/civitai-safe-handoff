@@ -1,0 +1,29 @@
+{
+  "browser": "msedge",
+  "browserVersion": "158.0.4370.45",
+  "buildSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+  "hostOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "hostContract": "simulated",
+  "bytes": 268435456,
+  "interruptAfterBytes": 67108864,
+  "sourceAndSavedSha256": "74bceed4a0c62c173e091369f7c2c7cace9353d5d9cde2f4b9be1b19ba56f01c",
+  "sameRecipientTab": true,
+  "senderStayedOnline": true,
+  "refusedSmallSaveRetried": false,
+  "results": [
+    {
+      "buildSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+      "mode": "resume",
+      "interruptionReceivedBytes": 67108864,
+      "firstAttemptSentBytes": 68059136,
+      "resumeOffsetBytes": 67108864,
+      "secondAttemptSentBytes": 201326592,
+      "verifiedResumeAndSaveMs": 31619,
+      "verifiedSave": true,
+      "changedResumeReplyRejectedBeforePayload": true
+    }
+  ]
+}
