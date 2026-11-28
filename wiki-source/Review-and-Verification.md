@@ -1,8 +1,8 @@
 # Review and verification
 
-Version 0.2.0 is approved and live. Its hosted HTML matches the submitted ZIP byte for byte, and both Civitai catalogs identify the same `civitai-safe-handoff` App Block. The manifest uses an `allow-scripts` iframe sandbox and requests zero account scopes.
+The review kit identifies the last verified deployment. The deployment record names both Civitai catalogs, the matching App Block, the SHA-256 of the served HTML, and the reviewed ZIP. The manifest uses an `allow-scripts` iframe sandbox and requests zero account scopes.
 
-[Project site](https://chriscollins500.github.io/civitai-safe-handoff/) · [Review kit and screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/) · [Live deployment evidence](https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/evidence/civitai-only/v0.2.0-live-deployment.json)
+[Project site](https://chriscollins500.github.io/civitai-safe-handoff/) · [Verified deployment and test screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/)
 
 ## Run a reviewer handoff
 
@@ -16,12 +16,12 @@ The gallery uses synthetic recipients and a synthetic workflow. It captures the 
 
 [App-box evidence and repeatable commands](https://github.com/chriscollins500/civitai-safe-handoff/blob/main/validation/CIVITAI_APP_BOX.md)
 
-## v0.4.0 candidate
+## v0.4.0 fixture checks
 
-Use the authorized review build for these additional checks.
+Use the v0.4.0 reviewed build to reproduce these checks with synthetic files.
 
 1. Open a drop-off request and verify its optional checklist. Prepare a synthetic ZIP and check that the recipient sees the intended entry names and sizes.
 2. Interrupt an active transfer. Keep the recipient tab open and issue a fresh offer for that recipient. Compare the resumed ZIP and the original with SHA-256.
 3. Export verified receipts after the first save and again after closure. Compare the records against the actual recipients who verified their files.
 
-The candidate tests used local Civitai host fixtures in Edge and Firefox. The signed-in, separate-device Civitai checks and the offline pickup gate still require live verification.
+The v0.4.0 tests used local Civitai host fixtures in Edge and Firefox. To confirm a real pickup, repeat the signed-in test on Civitai with the sender's tab open and a working direct connection. An offline sender would require the temporary storage requested from Civitai.

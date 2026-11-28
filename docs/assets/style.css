@@ -17,7 +17,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 p, li, td, th { line-height: 1.65; }
 a { color: var(--mint); text-underline-offset: .23em; }
 a:hover { color: #e8fff4; }
-a:focus-visible, button:focus-visible { outline: 3px solid #d1ffeb; outline-offset: 5px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid #d1ffeb; outline-offset: 5px; }
 button { font: inherit; }
 img { display: block; max-width: 100%; height: auto; }
 .wrap { width: min(var(--max), calc(100% - 2 * clamp(1rem, 5vw, 4rem))); margin-inline: auto; }
@@ -31,7 +31,8 @@ img { display: block; max-width: 100%; height: auto; }
 nav a { color: var(--muted); font-size: .92rem; font-weight: 620; text-decoration: none; }
 nav a[aria-current] { color: var(--mint); text-decoration: underline; }
 .hero { position: relative; isolation: isolate; overflow: hidden; display: grid; align-items: center; min-height: clamp(32rem, 48vw, 43rem); background: #0b1923; }
-.hero-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 61%; }
+.hero-art { position: absolute; inset: 0; z-index: -2; }
+.hero-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 61%; }
 .hero::after { position: absolute; content: ''; inset: 0; z-index: -1; background: linear-gradient(90deg, #0b1722 0%, #0b1722f0 25%, #0b17228c 52%, #0b172200 76%); }
 .hero-content { padding-block: clamp(3.5rem, 8vw, 8.5rem); }
 .eyebrow { color: var(--mint); font: 670 .75rem/1.5 ui-monospace, 'Cascadia Code', monospace; letter-spacing: .075em; text-transform: uppercase; margin-bottom: 1rem; }
@@ -41,6 +42,7 @@ h2 { font-size: clamp(1.95rem, 4vw, 3.5rem); font-weight: 730; }
 h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: -.03em; }
 .lead { max-width: 39rem; margin-top: 1.3rem; color: #d6e5e8; font-size: clamp(1.03rem, 2vw, 1.22rem); }
 .hero .lead { max-width: 33rem; }
+.beta-note { margin-top: .8rem; max-width: 31rem; color: var(--muted); font-size: .92rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.6rem; }
 .button { display: inline-flex; justify-content: center; align-items: center; min-height: 2.9rem; border: 1px solid var(--border); border-radius: .55rem; padding: .65rem 1rem; font-weight: 720; font-size: .91rem; line-height: 1.25; text-decoration: none; cursor: pointer; }
 .button.primary { color: #12251e; background: var(--mint); border-color: var(--mint); }
@@ -91,6 +93,11 @@ h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: -.
 .jump a { color: var(--mint); text-decoration: underline; }
 .rule { border-top: 1px solid var(--border); }
 .readable { max-width: 48rem; }
+.pickup-states { margin-top: 1.6rem; padding: 1.15rem 1.2rem; border: 1px solid var(--border); border-radius: .85rem; background: var(--surface); }
+.pickup-states dl { margin: .7rem 0 0; }
+.pickup-states dl > div + div { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border); }
+.pickup-states dt { color: var(--mint); font-weight: 700; }
+.pickup-states dd { margin: .2rem 0 0; color: var(--muted); line-height: 1.55; }
 .gallery { display: grid; gap: 1.05rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.3rem; align-items: start; }
 .gallery-wide { grid-column: 1 / -1; }
 .candidate-gallery img { width: auto; max-width: 100%; margin-inline: auto; }
@@ -98,6 +105,8 @@ h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: -.
   .candidate-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .links { margin-top: .75rem; padding-inline-start: 1.15rem; }
+.earlier-screenshots { margin-top: 1.7rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.earlier-screenshots summary { color: var(--mint); font-weight: 650; cursor: pointer; }
 table { border-collapse: collapse; width: 100%; margin-top: 1.1rem; font-size: .92rem; }
 caption { text-align: left; color: var(--muted); margin-bottom: .42rem; }
 th, td { text-align: left; padding: .62rem clamp(.26rem, 1.5vw, .85rem); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
@@ -107,7 +116,7 @@ thead th { color: var(--mint); background: #182834; }
 @media (max-width: 760px) {
   .split, .gallery { grid-template-columns: minmax(0, 1fr); }
   .hero { min-height: 33rem; }
-  .hero-art { object-position: 72% center; }
+  .hero-art img { object-position: 72% center; }
   .hero::after { background: linear-gradient(90deg, #0a1722f9, #0a1722c2 65%, #0a17227b), linear-gradient(0deg, #0a1722, transparent 70%); }
   .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

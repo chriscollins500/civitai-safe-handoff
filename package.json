@@ -11,7 +11,9 @@
     "build:civitai": "node scripts/build-civitai.mjs",
     "test": "node --test test/civitai-dropoff.test.ts",
     "test:browser": "node --test --test-concurrency=1 test/browser/civitai.test.ts test/browser/civitai-live.test.ts",
-    "test:site": "node --test test/browser/civitai-site.test.ts"
+    "check:site": "node scripts/check-site-release.mjs",
+    "test:site": "npm run check:site && node --test test/browser/civitai-site.test.ts",
+    "verify:pages": "node scripts/verify-pages.mjs"
   },
   "dependencies": {
     "@civitai/app-sdk": "0.93.0",

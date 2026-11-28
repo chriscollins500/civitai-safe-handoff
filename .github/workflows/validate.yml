@@ -1,0 +1,64 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: App and Pages checks
+    if: toJSON(github.event.repository.private) == 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate workflow syntax
+        shell: bash
+        run: |
+          lint_dir="$(mktemp -d)"
+          curl --fail --silent --show-error --location --retry 2 \
+            --output "$lint_dir/actionlint.tar.gz" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $lint_dir/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
+          "$lint_dir/actionlint"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build:civitai
+      - run: npm exec -- playwright install --with-deps --only-shell chromium
+      - run: npm run test:browser
+        env:
+          SAFE_CIVITAI_LIVE_BROWSER: chromium
+      - run: npm run test:site
+        env:
+          SAFE_SITE_MANAGED_BROWSER: '1'
+
+  dependencies:
+    name: Dependency review
+    if: github.event_name == 'pull_request' && toJSON(github.event.repository.private) == 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: never

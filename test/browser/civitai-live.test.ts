@@ -46,6 +46,7 @@ async function optionalArtifact(path: string) {
 async function launch(kind = configuredBrowser) {
   if (kind === 'firefox') return firefox.launch();
   if (kind === 'webkit') return webkit.launch();
+  if (kind === 'chromium') return chromium.launch();
   return chromium.launch({ channel: kind });
 }
 

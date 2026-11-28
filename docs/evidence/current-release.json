@@ -1,0 +1,27 @@
+{
+  "kind": "civitai-live-deployment",
+  "sourceCommit": "95daf1804278734042c796013865591df7601599",
+  "checkedAt": "2026-11-28T15:26:23.965Z",
+  "version": "0.4.0",
+  "sourceZipSha256": "f3e50116612406efcb46ddaf05955c70e46b68613b6db34b10f9a4e4efbb1828",
+  "hostedPageSha256": "1dab3e3da2347bbd92e609799181ed8ba81ec0ebc2244c458cf25006cc156c3b",
+  "hostedPageBytes": 143077,
+  "liveUrl": "https://civitai-safe-handoff.civit.ai/",
+  "listingId": "apl_01M888V084KDFV0VZHB4QGABVW",
+  "appBlockId": "apb_01M8D50A9903C5VXWMAZ706SHW",
+  "catalogOrigins": [
+    "https://civitai.com",
+    "https://civitai.red"
+  ],
+  "frameAncestors": [
+    "frame-ancestors",
+    "https://civitai.com",
+    "https://*.civitai.com",
+    "https://*.civitaic.com",
+    "https://civitai.red",
+    "https://*.civitai.red",
+    "https://civitai.green",
+    "https://*.civitai.green"
+  ],
+  "screenshots": 3
+}

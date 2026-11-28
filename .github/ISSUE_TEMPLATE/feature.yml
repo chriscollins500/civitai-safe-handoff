@@ -1,0 +1,17 @@
+name: Suggest an improvement
+description: Describe a creator or recipient workflow the app or site could make easier.
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to do?
+      description: Describe the handoff, pickup, or review task and where you get stuck. Use synthetic examples and omit pickup codes and private details.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: What would make the task easier?
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security concern privately
+    url: https://github.com/chriscollins500/civitai-safe-handoff/security/advisories/new
+    about: Report vulnerabilities with synthetic data and redact private pickup details.
+  - name: Read the handoff guide
+    url: https://chriscollins500.github.io/civitai-safe-handoff/guide/
+    about: Find the steps for sending, saving, verifying, and requesting a drop-off.

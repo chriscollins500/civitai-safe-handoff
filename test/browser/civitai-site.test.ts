@@ -4,12 +4,23 @@ import { mkdir, readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { test } from 'node:test';
-import { chromium } from 'playwright';
+import { chromium, type Page } from 'playwright';
 
 const prefix = '/civitai-safe-handoff/';
-const types: Record<string, string> = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png' };
+const types: Record<string, string> = {
+  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png',
+  '.webp': 'image/webp', '.json': 'application/json',
+};
 const visiblePages = ['', 'guide/', 'limits/', 'review/', 'missing/'];
 const widthChecks = [320, 390, 768, 1024, 1440];
+
+async function tabTo(page: Page, label: string) {
+  for (let steps = 0; steps <= 24; steps++) {
+    if (await page.evaluate(() => document.activeElement?.textContent?.trim()) === label) return steps;
+    if (steps < 24) await page.keyboard.press('Tab');
+  }
+  assert.fail('Keyboard focus did not reach ' + label);
+}
 
 test('SAFE Handoff documentation works from the GitHub Pages project path', { timeout: 90000 }, async (ctx) => {
   const site = resolve(process.env.SAFE_SITE_ROOT ?? (existsSync('site/index.html') ? 'site' : 'docs'));
@@ -31,7 +42,7 @@ test('SAFE Handoff documentation works from the GitHub Pages project path', { ti
   const address = server.address();
   assert.ok(address && typeof address === 'object');
   const origin = `http://127.0.0.1:${address.port}`;
-  const browser = await chromium.launch({ channel: 'chrome' });
+  const browser = await chromium.launch(process.env.SAFE_SITE_MANAGED_BROWSER === '1' ? {} : { channel: 'chrome' });
   ctx.after(() => browser.close());
   const page = await browser.newPage();
   const errors: string[] = [];
@@ -57,11 +68,65 @@ test('SAFE Handoff documentation works from the GitHub Pages project path', { ti
       }
     }
   }
-  assert.deepEqual(errors, []);
-  assert.deepEqual(requestedOutsideSite, []);
+  const keyboardJourneys = [];
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 820 });
+    await page.goto(origin + prefix);
+    const hero = page.locator('.hero-art img');
+    assert.match(await hero.evaluate((image) => (image as HTMLImageElement).currentSrc), /\/assets\/cover\.webp$/);
+    assert.equal(await hero.getAttribute('src'), 'assets/cover.png');
+    const appLinks = page.getByRole('navigation', { name: 'Open SAFE Handoff' });
+    assert.equal(await appLinks.getByRole('link', { name: 'Open on Civitai.com' }).getAttribute('href'),
+      'https://civitai.com/apps/run/civitai-safe-handoff');
+    assert.equal(await appLinks.getByRole('link', { name: 'Open on Civitai.red' }).getAttribute('href'),
+      'https://civitai.red/apps/run/civitai-safe-handoff');
+    assert.ok(await page.getByText('Access to Civitai Apps depends on your account during beta.', { exact: false }).isVisible());
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'Skip to content');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'main');
+    const launchSteps = await tabTo(page, 'Open on Civitai.com');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'Open on Civitai.red');
+
+    await tabTo(page, 'Learn the handoff');
+    await page.keyboard.press('Enter');
+    await page.waitForURL(origin + prefix + 'guide/');
+    await tabTo(page, 'Pick up');
+    await page.keyboard.press('Enter');
+    assert.equal(page.url(), origin + prefix + 'guide/#recipient');
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'recipient');
+    assert.deepEqual(await page.locator('.pickup-states dt').allTextContents(),
+      ['Save file', 'Civitai started the save.', 'Verified save']);
+
+    await tabTo(page, 'Review kit');
+    await page.keyboard.press('Enter');
+    await page.waitForURL(origin + prefix + 'review/');
+    assert.ok(await page.getByText('a simulated Civitai host', { exact: false }).first().isVisible());
+    const releaseVersion = await page.locator('#live-deployment').getAttribute('data-release-version');
+    assert.match(releaseVersion ?? '', /^\d+\.\d+\.\d+$/);
+    const evidenceSteps = await tabTo(page, 'Live deployment evidence');
+    const recordUrl = origin + prefix + 'evidence/current-release.json';
+    const pending = page.waitForResponse((response) => response.url() === recordUrl);
+    await page.keyboard.press('Enter');
+    const record = await pending;
+    assert.equal(record.status(), 200);
+    const receipt = await record.json();
+    assert.equal(receipt.version, releaseVersion);
+    assert.equal(receipt.kind, 'civitai-live-deployment');
+    assert.deepEqual(receipt.catalogOrigins, ['https://civitai.com', 'https://civitai.red']);
+
+    await page.goto(origin + prefix + 'review/#screenshots');
+    const archive = page.locator('.earlier-screenshots');
+    assert.equal(await archive.getAttribute('open'), null);
+    await tabTo(page, 'Earlier v0.2.0 browser test screenshots');
+    await page.keyboard.press('Enter');
+    assert.notEqual(await archive.getAttribute('open'), null);
+    keyboardJourneys.push({ width, launchSteps, evidenceSteps });
+  }
 
   await page.goto(origin + prefix + 'review/');
-  assert.ok(await page.getByRole('heading', { name: 'v0.4.0 candidate screenshots' }).isVisible());
+  assert.ok(await page.getByRole('heading', { name: 'Browser test screenshots' }).isVisible());
   const candidateImages = await page.locator('#v040 img').evaluateAll((images) => images.map((image) => image.getAttribute('src')));
   assert.deepEqual(candidateImages, [
     '../assets/v0.4.0/v0.4.0-archive-preview.png',
@@ -90,7 +155,9 @@ test('SAFE Handoff documentation works from the GitHub Pages project path', { ti
   await noScript.goto(origin + prefix);
   assert.ok(await noScript.getByText('When all three recipients verify', { exact: false }).isVisible());
   assert.equal(await noScript.getByRole('button', { name: 'Verify next save' }).count(), 0);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(requestedOutsideSite, []);
   const proof = { browser: browser.version(), widths: widthChecks, routes: visiblePages, noThirdPartyRequests: true,
-    keyboardReceiptDemo: true, noScriptFallback: true };
+    keyboardReceiptDemo: true, noScriptFallback: true, keyboardJourneys };
   console.log(JSON.stringify(proof));
 });
