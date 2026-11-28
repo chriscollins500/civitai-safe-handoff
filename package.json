@@ -16,7 +16,7 @@
     "verify:pages": "node scripts/verify-pages.mjs"
   },
   "dependencies": {
-    "@civitai/app-sdk": "0.93.0",
+    "@civitai/app-sdk": "0.95.0",
     "@noble/hashes": "2.4.0",
     "fflate": "0.8.3"
   },
