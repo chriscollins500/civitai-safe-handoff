@@ -2,13 +2,15 @@
 
 Browser-only creator file sharing inside Civitai. Send a supported file to up to 20 recipients and see a separate receipt each time someone verifies the file they saved. The app clears temporary pickup data at 24 hours or the final verified save, whichever comes first.
 
-**v0.2.0 is live on Civitai.** Sign in on your preferred domain and open the app from the App Store. The [deployment record](validation/evidence/civitai-only/v0.2.0-live-deployment.json) matches the published HTML to the submitted bundle.
+Sign in on your preferred domain and open SAFE Handoff if your account has Apps beta access. The [review kit](https://chriscollins500.github.io/civitai-safe-handoff/review/#live-deployment) names the last verified release and matches the hosted HTML to the submitted build on both catalogs.
 
-[Project website](https://chriscollins500.github.io/civitai-safe-handoff/) · [User guide](https://chriscollins500.github.io/civitai-safe-handoff/guide/) · [Wiki](https://github.com/chriscollins500/civitai-safe-handoff/wiki) · [App screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/#screenshots)
+[Open on Civitai.com](https://civitai.com/apps/run/civitai-safe-handoff) · [Open on Civitai.red](https://civitai.red/apps/run/civitai-safe-handoff) · [Project website](https://chriscollins500.github.io/civitai-safe-handoff/)
 
-## v0.4.0 review candidate
+[User guide](https://chriscollins500.github.io/civitai-safe-handoff/guide/) · [Wiki](https://github.com/chriscollins500/civitai-safe-handoff/wiki) · [App screenshots](https://chriscollins500.github.io/civitai-safe-handoff/review/#screenshots) · [Support](https://github.com/chriscollins500/civitai-safe-handoff/issues)
 
-This candidate adds a drop-off request flow, ZIP previews, individual revocation, combined verified receipts, and resume for interrupted live transfers. The [v0.4.0 review packet](submission/REVIEW-v0.4.0.md) matches the exact tested App Block and lists the remaining live checks.
+## v0.4.0 release
+
+This release includes drop-off requests, ZIP previews, individual revocation, combined verified receipts, and resume for interrupted live transfers. The [v0.4.0 review packet](submission/REVIEW-v0.4.0.md) describes the tested App Block and the browser fixture.
 
 ## How it works
 
@@ -31,11 +33,12 @@ npm run build:civitai
 civitai app validate dist/civitai-app
 ```
 
-Compare the built index and manifest with the [v0.4.0 review candidate](submission/v0.4.0/). Run the browser tests with Chrome installed on the engineering host. Users need only their existing browser.
+Compare the built index and manifest with the [v0.4.0 submission](submission/v0.4.0/). Run the browser tests with Chrome installed on the engineering host. Users need only their existing browser.
 
 ```sh
 npm run test:browser
 npm run test:site
+node --use-system-ca scripts/verify-civitai-live.mjs --staged --version 0.4.0
 ```
 
-[v0.4.0 candidate evidence](validation/v0.4.0.md) · [Live release evidence](validation/CIVITAI_APP_BOX.md) · [Report a security concern](SECURITY.md)
+[v0.4.0 browser fixture evidence](validation/v0.4.0.md) · [Live deployment evidence](docs/evidence/current-release.json) · [Report a security concern](SECURITY.md)

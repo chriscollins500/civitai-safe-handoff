@@ -1,0 +1,34 @@
+name: Report a bug
+description: Report an app, pickup, receipt, or website problem with a synthetic example.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Keep pickup and reply codes, recipient details, and private files out of this public report. Use the private vulnerability form for security concerns.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen?
+      options:
+        - Prepare a handoff or request a drop-off
+        - Open an offer or connect
+        - Save or resume a pickup
+        - Verify a save or export a receipt
+        - Website, wiki, or review kit
+        - Another part of the app
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: App version, browser, and domain
+      placeholder: v0.4.0, Chrome, Civitai.red
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: What did you try and what happened?
+      description: Give steps that someone can repeat with a small synthetic file and describe what you expected to see.
+    validations:
+      required: true

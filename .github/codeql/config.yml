@@ -1,0 +1,6 @@
+name: SAFE Handoff source
+
+paths:
+  - src
+  - scripts
+  - docs/assets/demo.js

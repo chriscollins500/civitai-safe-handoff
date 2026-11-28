@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 test('built Civitai composer pins exact files on the .com and .red host contracts', { timeout: 30000 }, async (context) => {
   const block = await readFile('dist/civitai-app/index.html', 'utf8');
-  const browser = await chromium.launch({ channel: 'chrome' });
+  const browser = await chromium.launch(process.env.SAFE_CIVITAI_LIVE_BROWSER === 'chromium' ? {} : { channel: 'chrome' });
   context.after(() => browser.close());
   const child = 'https://safe-composer-fixture.civit.ai/';
   const parent = `<!doctype html><meta charset="utf-8"><iframe title="Civitai composer" sandbox="allow-scripts" src="${child}"></iframe>

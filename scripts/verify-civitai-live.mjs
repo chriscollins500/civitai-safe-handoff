@@ -1,19 +1,43 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { parseArgs } from 'node:util';
 import { unzipSync } from 'fflate';
 
 const root = new URL('../', import.meta.url);
 const origins = ['https://civitai.com', 'https://civitai.red'];
-const args = process.argv.slice(2);
-if (args.length && (args.length !== 1 || args[0] !== '--staged')) throw new Error('Usage: verify-civitai-live.mjs [--staged]');
-const staged = args[0] === '--staged';
-const evidenceDir = staged ? 'validation/evidence/civitai-only/' : 'docs/evidence/civitai-only/';
-const proof = JSON.parse(await readFile(new URL(evidenceDir + 'candidate-package-proof.json', root), 'utf8'));
+const { values } = parseArgs({ options: {
+  current: { type: 'boolean' },
+  staged: { type: 'boolean' },
+  version: { type: 'string' },
+} });
+if (values.current && (values.staged || values.version)) {
+  throw new Error('Use --current alone to check the review kit record against the live catalogs.');
+}
+const current = values.current
+  ? JSON.parse(await readFile(new URL('docs/evidence/current-release.json', root), 'utf8'))
+  : undefined;
+const staged = values.staged || Boolean(current);
+const version = current?.version ?? values.version ?? '0.2.0';
+if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Expected a numeric Civitai version such as 0.4.0.');
+if (current && !/^[a-f0-9]{40}$/.test(current.sourceCommit)) throw new Error('The review kit must pin a full source commit.');
+const evidenceDir = 'validation/evidence/civitai-only/';
+const baseline = JSON.parse(await readFile(new URL(evidenceDir + 'candidate-package-proof.json', root), 'utf8'));
+let proof = baseline;
+let submissionDir = 'submission/';
+if (version !== '0.2.0') {
+  const packaged = JSON.parse(await readFile(new URL(evidenceDir + 'packaged-' + version + '.json', root), 'utf8'));
+  if (packaged.version !== version || typeof packaged.artifact !== 'string' || !/^[a-z0-9._-]+\.zip$/.test(packaged.artifact)) {
+    throw new Error('The package evidence does not identify the requested Civitai release.');
+  }
+  proof = { archive: 'dist/' + packaged.artifact, sha256: packaged.sha256,
+    entries: Object.fromEntries(packaged.files.map((entry) => [entry.path, entry])) };
+  submissionDir += 'v' + version + '/';
+}
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 async function reviewEntries() {
   const names = ['block.manifest.json', 'index.html'];
-  if (staged) return Promise.all(names.map((name) => readFile(new URL('submission/' + name, root))));
+  if (staged) return Promise.all(names.map((name) => readFile(new URL(submissionDir + name, root))));
   const archive = await readFile(new URL(proof.archive, root));
   if (digest(archive) !== proof.sha256) throw new Error('The retained review ZIP does not match its SHA-256.');
   const files = unzipSync(archive);
@@ -27,10 +51,23 @@ if (digest(manifestBytes) !== proof.entries['block.manifest.json'].sha256 ||
 }
 const manifest = JSON.parse(Buffer.from(manifestBytes).toString('utf8'));
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(manifest.blockId)) throw new Error('The reviewed manifest has an invalid Civitai slug.');
+if (manifest.version !== version) throw new Error('The reviewed manifest version differs from the requested version.');
 const assetOrigin = `https://${manifest.blockId}.civit.ai`;
 
 function get(url) {
   return fetch(url, { redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(15000) });
+}
+
+async function verifyPinnedSubmission() {
+  const source = 'https://raw.githubusercontent.com/chriscollins500/civitai-safe-handoff/';
+  const path = source + current.sourceCommit + '/' + submissionDir;
+  await Promise.all([['block.manifest.json', manifestBytes], ['index.html', pageBytes]].map(async ([name, local]) => {
+    const response = await get(path + name);
+    if (!response.ok) throw new Error('Pinned source ' + name + ' returned HTTP ' + response.status + '.');
+    if (digest(new Uint8Array(await response.arrayBuffer())) !== digest(local)) {
+      throw new Error('The pinned source commit does not match the checked-in ' + name + '.');
+    }
+  }));
 }
 
 const catalogs = await Promise.all(origins.map(async (origin) => {
@@ -70,11 +107,26 @@ if (catalogs.some(({ status }) => status === 404) && catalogs.every(({ status })
   }
   const bytes = new Uint8Array(await page.arrayBuffer());
   const sha256 = digest(bytes);
-  if (sha256 !== digest(pageBytes)) throw new Error(`Hosted page SHA-256 differs from the reviewed page: ${sha256}`);
-
-  console.log(JSON.stringify({ checkedAt: new Date().toISOString(), version: manifest.version,
-    ...(staged ? { comparisonSource: 'checked-in submission', recordedReviewZipSha256: proof.sha256 } : { sourceZipSha256: proof.sha256 }),
-    hostedPageSha256: sha256, hostedPageBytes: bytes.length, liveUrl: assetOrigin + '/', listingId: first.id,
-    appBlockId: first.kindData.appBlockId, catalogOrigins: origins, frameAncestors, screenshots: first.screenshots.length,
-  }, null, 2));
+  if (version !== '0.2.0' && sha256 === baseline.entries['index.html'].sha256) {
+    console.error(`Civitai is still serving the verified v0.2.0 page. The reviewed v${version} page is not live yet.`);
+    process.exitCode = 2;
+  } else {
+    if (sha256 !== digest(pageBytes)) throw new Error(`Hosted page SHA-256 differs from the reviewed page: ${sha256}`);
+    const deployment = { checkedAt: new Date().toISOString(), version: manifest.version,
+      ...(staged ? { comparisonSource: 'checked-in submission', recordedReviewZipSha256: proof.sha256 } : { sourceZipSha256: proof.sha256 }),
+      hostedPageSha256: sha256, hostedPageBytes: bytes.length, liveUrl: assetOrigin + '/', listingId: first.id,
+      appBlockId: first.kindData.appBlockId, catalogOrigins: origins, frameAncestors, screenshots: first.screenshots.length,
+    };
+    if (current) {
+      for (const field of ['version', 'hostedPageSha256', 'hostedPageBytes', 'liveUrl', 'listingId', 'appBlockId', 'catalogOrigins']) {
+        if (JSON.stringify(current[field]) !== JSON.stringify(deployment[field])) {
+          throw new Error('The review kit does not match the live deployment field ' + field + '.');
+        }
+      }
+      if (current.sourceZipSha256 !== proof.sha256) throw new Error('The review kit ZIP digest differs from the retained release record.');
+      await verifyPinnedSubmission();
+      deployment.sourceCommit = current.sourceCommit;
+    }
+    console.log(JSON.stringify(deployment, null, 2));
+  }
 }
